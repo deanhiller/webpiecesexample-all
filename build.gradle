@@ -1,0 +1,156 @@
+
+//NOTE: There is a picture on https://docs.gradle.org/current/userguide/java_plugin.html as to the default gradle targets for the java
+//and here we modify that picture a little so that jar depends on compileHtml so that compiled html files end up in the production jar
+//file.  The dev-server does not have this since it relies on the source files to begin with recompiling when changes happen
+
+ext {
+
+    webpiecesVersion = '1.9.38'
+
+    /*
+     * Dependencies can be named so that sub-projects can reference consistent version of them.
+     * dependencies {
+     *     compile deps['joda-time']
+     * }
+     *
+     * This list is NOT who you depend on but just a Map of String, String...
+     */
+    deps = [
+       'web-webserver':      "org.webpieces:http-webserver:${webpiecesVersion}",
+       'web-webserver-test': "org.webpieces:http-webserver-test:${webpiecesVersion}",
+       'web-devrouter':      "org.webpieces:http-router-dev:${webpiecesVersion}",
+       'web-devtemplating':  "org.webpieces:http-templating-dev:${webpiecesVersion}",
+       'selenium':        'org.seleniumhq.selenium:selenium-java:2.53.1',
+
+       //These next two are in case you have libraries that want to use an
+       //http-client or a nio library...
+       'web-channelmgr':  "org.webpieces:core-channelmanager2:${webpiecesVersion}",
+       'web-httpclient':  "org.webpieces:http-client:${webpiecesVersion}",
+       'junit':           'junit:junit:4.11',  
+       'groovy':          'org.codehaus.groovy:groovy-all:2.4.6',
+       'javax-inject':    'javax.inject:javax.inject:1',
+       'slf4j-api':       'org.slf4j:slf4j-api:1.7.21',
+       //do we need this one...
+       //'logback-core':  'ch.qos.logback:logback-core:1.1.7', 
+       'logback-classic': 'ch.qos.logback:logback-classic:1.1.7',
+       'joda-time':       'joda-time:joda-time:2.9.4',
+       'guice':           'com.google.inject:guice:4.0',
+       'guava':           'com.google.guava:guava:19.0',
+       'apache-commons-io': 'org.apache.commons:commons-io:1.3.2'
+    ]  
+}
+
+allprojects {
+   apply plugin: 'jacoco' //code coverage
+
+   buildDir = file('output')
+
+   repositories {
+      jcenter()
+   }
+
+   jacoco {
+      toolVersion = '0.7.1.201405082137'
+   }
+}
+
+subprojects {
+   apply plugin: 'java'
+   apply plugin: 'eclipse'
+   apply plugin: 'idea'
+
+   //These 2 lines make it so you don't have to use @Param annotation on 
+   //every controller method which can get quite annoying.  Instead, webpieces
+   //will just use reflection to grab the param names which is just as fast as 
+   //annotations
+   [compileJava, compileTestJava]*.options.collect {options ->
+     options.compilerArgs.add '-parameters'
+   }
+
+   project.ext.fixedLibDir = file('lib')
+   project.ext.stagingDir = file('staging')
+   project.ext.toStagingDir = file(new File(buildDir, 'alljars'))
+
+   repositories {
+       mavenCentral()
+       //For testing locally
+       maven {
+         url uri('/tmp/myRepo/')
+       }
+   }
+   dependencies {
+       testCompile deps['junit']
+
+       //add global dependencies for all projects here....
+       compile deps['javax-inject']
+       compile deps['guice']
+       compile deps['slf4j-api']
+       compile deps['logback-classic']
+
+       //This line includes any jars a developer drops into {project}/lib directory
+       compile fileTree(dir: 'lib', include: '*.jar')
+   }
+
+   //This copies new jars over from ivy/maven and project/lib and finally our built up jar so all jars are in
+   //one output directory AND it deletes jars in there that are no longer part of any of those locations as well since
+   //it is a task of type: Sync
+   task syncJars(type: Sync, dependsOn: 'jar') {
+       from(configurations.compile) {}
+       from(fixedLibDir) {}
+       from(libsDir) {}
+       into toStagingDir
+   }
+
+   assemble.dependsOn('syncJars')
+
+   test{
+      beforeTest{ descr ->
+        logger.warn("Starting Test ${descr.className} : ${descr.name}")
+      }
+      
+      systemProperty "gradle.running", "true"
+   }
+
+    jacocoTestReport {
+        additionalSourceDirs = files(sourceSets.main.allSource.srcDirs)
+        sourceDirectories = files(sourceSets.main.allSource.srcDirs)
+        classDirectories =  files(sourceSets.main.output)
+        reports {
+            html.enabled = true
+            xml.enabled = true
+            csv.enabled = false
+        }
+    }
+
+    jacocoTestReport.dependsOn test
+    check.dependsOn jacocoTestReport
+}
+
+task codeCoverage(type: org.gradle.testing.jacoco.tasks.JacocoReport) {
+    dependsOn = subprojects.test
+    additionalSourceDirs = files(subprojects.sourceSets.main.allSource.srcDirs)
+    sourceDirectories = files(subprojects.sourceSets.main.allSource.srcDirs)
+    classDirectories =  files(subprojects.sourceSets.main.output)
+    executionData = files(subprojects.jacocoTestReport.executionData)
+    reports {
+        html.enabled = true
+        xml.enabled = true
+        csv.enabled = false
+    }
+    onlyIf = {
+        true
+    }
+    doFirst {
+        executionData = files(executionData.findAll {
+            it.exists()
+        })
+    }
+}
+
+//we don't do java plugin on top level on purpose as it is not a java
+//project BUT we need build and clean to work inline with the java projects
+task build(dependsOn: ':codeCoverage')
+
+task clean() << {
+   delete "${buildDir}"
+}
