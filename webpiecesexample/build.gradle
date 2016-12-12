@@ -7,7 +7,7 @@ buildscript {
        }
     }
     dependencies {
-        classpath 'org.webpieces:gradle-plugin-htmlcompiler:1.9.38'
+        classpath 'org.webpieces:gradle-plugin-htmlcompiler:1.9.41'
     }
 }
 
@@ -15,7 +15,7 @@ apply plugin: 'application'
 apply plugin: 'org.webpieces.templatecompiler'
 
 sourceSets {
-    //For testing, we need to put the html files on the classpath which are co-located with the controllers
+    //For debugging in IDE(for tests and server), we need to put the html files on the classpath which are co-located with the controllers
     test {
         resources {
             //This ADDS src/main/java/**/*.html and we still read in src/test/resources/**
@@ -46,7 +46,7 @@ dependencies {
   testCompile deps['selenium']
 }
 
-mainClassName = "org.webpieces.example.WebpiecesExampleServer"
+mainClassName = "org.webpieces.WebpiecesExampleServer"
 applicationDefaultJvmArgs = ["-Dlogback.configurationFile=config/logback.xml"]
 
 //Here, we must modify the start scripts to set cd to user.dir correctly as setting user.dir does NOT work

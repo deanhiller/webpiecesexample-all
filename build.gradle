@@ -5,7 +5,7 @@
 
 ext {
 
-    webpiecesVersion = '1.9.38'
+    webpiecesVersion = '1.9.41'
 
     /*
      * Dependencies can be named so that sub-projects can reference consistent version of them.
@@ -56,6 +56,7 @@ allprojects {
 
 subprojects {
    apply plugin: 'java'
+   apply plugin: 'checkstyle'
    apply plugin: 'eclipse'
    apply plugin: 'idea'
 
@@ -70,6 +71,10 @@ subprojects {
    project.ext.fixedLibDir = file('lib')
    project.ext.stagingDir = file('staging')
    project.ext.toStagingDir = file(new File(buildDir, 'alljars'))
+
+   checkstyle {
+       configFile = rootProject.file('config/checkstyle.xml')
+   }
 
    repositories {
        mavenCentral()
