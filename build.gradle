@@ -71,6 +71,7 @@ subprojects {
    project.ext.fixedLibDir = file('lib')
    project.ext.stagingDir = file('staging')
    project.ext.toStagingDir = file(new File(buildDir, 'alljars'))
+   project.ext.groovyGenSrcDir = file(new File(buildDir, 'groovysrc'))
 
    checkstyle {
        configFile = rootProject.file('config/checkstyle.xml')
@@ -117,8 +118,8 @@ subprojects {
    }
 
     jacocoTestReport {
-        additionalSourceDirs = files(sourceSets.main.allSource.srcDirs)
-        sourceDirectories = files(sourceSets.main.allSource.srcDirs)
+        additionalSourceDirs = files(sourceSets.main.allSource.srcDirs+groovyGenSrcDir)
+        sourceDirectories = files(sourceSets.main.allSource.srcDirs+groovyGenSrcDir)
         classDirectories =  files(sourceSets.main.output)
         reports {
             html.enabled = true
