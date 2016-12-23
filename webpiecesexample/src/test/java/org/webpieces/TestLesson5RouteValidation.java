@@ -2,10 +2,11 @@ package org.webpieces;
 import java.io.IOException;
 
 import org.junit.Test;
+import org.webpieces.plugins.hibernate.HibernatePlugin;
 import org.webpieces.webserver.test.Asserts;
 
 import org.webpieces.ServerConfig;
-import org.webpieces.WebpiecesExampleServer;
+import org.webpieces.Server;
 
 public class TestLesson5RouteValidation {
 
@@ -20,12 +21,12 @@ public class TestLesson5RouteValidation {
 		if(property == null || !"true".equals(property))
 			return; //don't run test except in gradle build
 		
-		ServerConfig serverConfig = new ServerConfig();
+		ServerConfig serverConfig = new ServerConfig(HibernatePlugin.PERSISTENCE_TEST_UNIT);
 		serverConfig.setHttpPort(0); //bind to any port
 		serverConfig.setHttpsPort(0); //bind to any port
 		serverConfig.setValidateRouteIdsOnStartup(true);
 		//really just making sure we don't throw an exception...which catches quite a few mistakes
-		WebpiecesExampleServer server = new WebpiecesExampleServer(null, null, serverConfig);
+		Server server = new Server(null, null, serverConfig);
 		
 		//Start server to force validation
 		server.start();

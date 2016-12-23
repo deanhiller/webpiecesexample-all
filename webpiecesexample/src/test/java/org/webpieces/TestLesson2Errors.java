@@ -6,10 +6,14 @@ import java.util.concurrent.CompletableFuture;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.webpieces.ddl.api.JdbcApi;
+import org.webpieces.ddl.api.JdbcConstants;
+import org.webpieces.ddl.api.JdbcFactory;
 import org.webpieces.httpcommon.api.RequestId;
 import org.webpieces.httpcommon.api.RequestListener;
 import org.webpieces.httpparser.api.dto.HttpRequest;
 import org.webpieces.httpparser.api.dto.KnownStatusCode;
+import org.webpieces.plugins.hibernate.HibernatePlugin;
 import org.webpieces.webserver.test.Asserts;
 import org.webpieces.webserver.test.FullResponse;
 import org.webpieces.webserver.test.MockResponseSender;
@@ -18,8 +22,8 @@ import org.webpieces.webserver.test.PlatformOverridesForTest;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 
-import org.webpieces.example.RemoteService;
-import org.webpieces.example.SomeLibrary;
+import org.webpieces.base.libs.RemoteService;
+import org.webpieces.base.libs.SomeLibrary;
 import org.webpieces.mock.MockRemoteSystem;
 import org.webpieces.mock.MockSomeLibrary;
 
@@ -45,15 +49,21 @@ public class TestLesson2Errors {
 	//see below comments in AppOverrideModule
 	private MockRemoteSystem mockRemote = new MockRemoteSystem(); //our your favorite mock library
 	private MockSomeLibrary mockLibrary = new MockSomeLibrary();
+	private JdbcApi jdbc = JdbcFactory.create(JdbcConstants.jdbcUrl, JdbcConstants.jdbcUser, JdbcConstants.jdbcPassword);
+	private static String pUnit = HibernatePlugin.PERSISTENCE_TEST_UNIT;
 
 	@Before
 	public void setUp() throws InterruptedException, ClassNotFoundException {
 		Asserts.assertWasCompiledWithParamNames("test");
 		
+		//clear in-memory database
+		jdbc.dropAllTablesFromDatabase();
+		
 		//you may want to create this server ONCE in a static method BUT if you do, also remember to clear out all your
 		//mocks after every test AND you can no longer run single threaded(tradeoffs, tradeoffs)
 		//This is however pretty fast to do in many systems...
-		WebpiecesExampleServer webserver = new WebpiecesExampleServer(new PlatformOverridesForTest(), new AppOverridesModule(), new ServerConfig(0, 0));
+		Server webserver = new Server(
+				new PlatformOverridesForTest(), new AppOverridesModule(), new ServerConfig(0, 0, pUnit));
 		server = webserver.start();
 	}
 	
@@ -63,8 +73,8 @@ public class TestLesson2Errors {
 	 */
 	@Test
 	public void testWebAppHasBugRenders500Route() {
-		mockLibrary.throwException(new RuntimeException("test internal bug page"));
-		HttpRequest req = TestLesson1BasicRequestResponse.createRequest("/absolute");
+		mockLibrary.addExceptionToThrow(new RuntimeException("test internal bug page"));
+		HttpRequest req = TestLesson1BasicRequestResponse.createRequest("/");
 		
 		server.incomingRequest(req, new RequestId(0), true, mockResponseSocket);
 		

@@ -7,7 +7,7 @@ buildscript {
        }
     }
     dependencies {
-        classpath 'org.webpieces:gradle-plugin-htmlcompiler:1.9.41'
+        classpath 'org.webpieces:gradle-plugin-htmlcompiler:1.9.45'
     }
 }
 
@@ -32,12 +32,31 @@ sourceSets {
     }
 }
 
+//ok, this is the deal here.  JPA/hibernate made the decision to look for a persistence.xml file
+//and scan for classes with @Entity in the directory OR jar with that xml file only
+//maven(and I hate this) a long time ago separated src/main/java and src/main/resources but
+//this screws tools in many situations like this one so this puts it back so the output is at
+//least put to the same location
+sourceSets.main.output.resourcesDir = sourceSets.main.output.classesDir
+compileJava.doLast { tasks.processResources.execute() }
+
 dependencies {
   //add maven dependencies here
   compile deps['web-webserver']
-
+  //optional plugin for if you use hibernate
+  compile deps['plugin-hibernate']
+  //REMOVE once you are on a real database
+  compile deps['h2db']
+  
   //IF you add dependencies on other projects locally, you need to modify WebpiecesExampleDevServer.java to include those
   //SOURCE paths(ie. *.java file paths not *.class files)) or it will not recompile that code as it changes
+
+  //optional plugin for H2 for testing to swap to in-memory database making things easy/fast to clear the db
+  testCompile deps['plugin-h2']
+
+  //A library that does everything mockito does but in just one class(so therefore, way easier to debug)
+  testCompile deps['core-mock']
+  testCompile deps['core-ddl']
 
   //For testing, we need to bring in web-webserver-test such that we can debug in the IDE as this just ensures
   //we use the htmlcompiler on-demand rather than waiting for the gradle plugin to invoke the same code. For 
@@ -46,7 +65,7 @@ dependencies {
   testCompile deps['selenium']
 }
 
-mainClassName = "org.webpieces.WebpiecesExampleServer"
+mainClassName = "org.webpieces.Server"
 applicationDefaultJvmArgs = ["-Dlogback.configurationFile=config/logback.xml"]
 
 //Here, we must modify the start scripts to set cd to user.dir correctly as setting user.dir does NOT work

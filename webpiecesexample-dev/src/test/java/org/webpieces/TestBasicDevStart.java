@@ -6,7 +6,7 @@ import java.lang.reflect.Parameter;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.webpieces.WebpiecesExampleDevServer;
+import org.webpieces.DevelopmentServer;
 
 public class TestBasicDevStart {
 
@@ -17,7 +17,7 @@ public class TestBasicDevStart {
 		testArgSetup("test");
 		
 		//really just making sure we don't throw an exception...which catches quite a few mistakes
-		WebpiecesExampleDevServer server = new WebpiecesExampleDevServer(true);
+		DevelopmentServer server = new DevelopmentServer(true);
 		//In this case, we bind a port
 		server.start();
 

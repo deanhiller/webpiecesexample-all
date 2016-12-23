@@ -5,7 +5,7 @@
 
 ext {
 
-    webpiecesVersion = '1.9.41'
+    webpiecesVersion = '1.9.45'
 
     /*
      * Dependencies can be named so that sub-projects can reference consistent version of them.
@@ -20,8 +20,12 @@ ext {
        'web-webserver-test': "org.webpieces:http-webserver-test:${webpiecesVersion}",
        'web-devrouter':      "org.webpieces:http-router-dev:${webpiecesVersion}",
        'web-devtemplating':  "org.webpieces:http-templating-dev:${webpiecesVersion}",
+       'core-mock':          "org.webpieces:core-mock:${webpiecesVersion}",
+       'core-ddl':           "org.webpieces:core-ddl:${webpiecesVersion}",
+       'plugin-hibernate':   "org.webpieces:hibernate-plugin:${webpiecesVersion}",
+       'plugin-h2':          "org.webpieces:h2db-plugin:${webpiecesVersion}",
        'selenium':        'org.seleniumhq.selenium:selenium-java:2.53.1',
-
+       'h2db':            'com.h2database:h2:1.4.192',
        //These next two are in case you have libraries that want to use an
        //http-client or a nio library...
        'web-channelmgr':  "org.webpieces:core-channelmanager2:${webpiecesVersion}",
@@ -71,7 +75,6 @@ subprojects {
    project.ext.fixedLibDir = file('lib')
    project.ext.stagingDir = file('staging')
    project.ext.toStagingDir = file(new File(buildDir, 'alljars'))
-   project.ext.groovyGenSrcDir = file(new File(buildDir, 'groovysrc'))
 
    checkstyle {
        configFile = rootProject.file('config/checkstyle.xml')
@@ -113,13 +116,21 @@ subprojects {
       beforeTest{ descr ->
         logger.warn("Starting Test ${descr.className} : ${descr.name}")
       }
-      
+      afterTest { descr, result ->
+        def totalTime = result.endTime - result.startTime
+        logger.warn("Test complete ${descr.className} : ${descr.name} TOTAL TIME=${totalTime}")
+      }
+      testLogging {
+        events "failed"
+        exceptionFormat "full"
+      } 
+
       systemProperty "gradle.running", "true"
    }
 
     jacocoTestReport {
-        additionalSourceDirs = files(sourceSets.main.allSource.srcDirs+groovyGenSrcDir)
-        sourceDirectories = files(sourceSets.main.allSource.srcDirs+groovyGenSrcDir)
+        additionalSourceDirs = files(sourceSets.main.allSource.srcDirs)
+        sourceDirectories = files(sourceSets.main.allSource.srcDirs)
         classDirectories =  files(sourceSets.main.output)
         reports {
             html.enabled = true
