@@ -17,15 +17,15 @@ public class ServerConfig {
 	private Map<String, String> webAppMetaProperties = new HashMap<>();
 
 	public ServerConfig(int httpPort, int httpsPort, String persistenceUnit) {
-		this(persistenceUnit);
+		webAppMetaProperties.put(HibernatePlugin.PERSISTENCE_UNIT_KEY, persistenceUnit);
 		this.httpPort = httpPort;
 		this.httpsPort = httpsPort;
 	}
 	
 	public ServerConfig(String persistenceUnit) {
-		webAppMetaProperties.put(HibernatePlugin.PERSISTENCE_UNIT_KEY, persistenceUnit);
+		this(8080, 8443, persistenceUnit);
 	}
-	
+
 	public VirtualFile getMetaFile() {
 		return metaFile;
 	}
@@ -61,5 +61,5 @@ public class ServerConfig {
 	public Map<String, String> getWebAppMetaProperties() {
 		return webAppMetaProperties;
 	}
-	
+
 }

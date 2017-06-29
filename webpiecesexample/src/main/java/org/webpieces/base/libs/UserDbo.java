@@ -28,7 +28,9 @@ import javax.persistence.Table;
 )
 @NamedQueries({
 	@NamedQuery(name = "findAllUsers", query = "select u from UserDbo as u"),
-	@NamedQuery(name = "findByEmailId", query = "select u from UserDbo as u where u.email=:email") })
+	@NamedQuery(name = "findByEmailId", query = "select u from UserDbo as u where u.email=:email"),
+	@NamedQuery(name = "findByIdWithRoleJoin", query = "select u from UserDbo as u left join fetch u.roles as r where u.id = :id")
+})
 public class UserDbo {
 
 	@Id
@@ -50,6 +52,11 @@ public class UserDbo {
 	@OneToMany(mappedBy = "manager")
 	private List<UserDbo> employees = new ArrayList<UserDbo>();
 
+	@OneToMany(mappedBy = "user")
+	private List<UserRole> roles = new ArrayList<UserRole>();
+
+	private EducationEnum levelOfEducation = null;
+	
 	public Integer getId() {
 		return id;
 	}
@@ -130,10 +137,45 @@ public class UserDbo {
 		}
 	}
 
+	public static UserDbo findWithJoin(EntityManager mgr, int id) {
+		Query query = mgr.createNamedQuery("findByIdWithRoleJoin");
+		query.setParameter("id", id);
+		try {
+			return (UserDbo) query.getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		}
+	}
+	
 	public String getName() {
 		return name;
 	}
 	public void setName(String name) {
 		this.name = name;
 	}
+
+	public EducationEnum getLevelOfEducation() {
+		return levelOfEducation;
+	}
+
+	public void setLevelOfEducation(EducationEnum levelOfEducation) {
+		this.levelOfEducation = levelOfEducation;
+	}
+
+	public List<UserRole> getRoles() {
+		return roles;
+	}
+
+	public void setRoles(List<UserRole> roles) {
+		this.roles = roles;
+	}
+
+	public void addRole(UserRole userRole) {
+		this.roles.add(userRole);
+	}
+
+	public void removeRole(UserRole r) {
+		this.roles.remove(r);
+	}
+
 }

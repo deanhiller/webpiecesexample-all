@@ -8,8 +8,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-import org.webpieces.httpcommon.api.RequestListener;
 import org.webpieces.nio.api.channels.TCPServerChannel;
+import org.webpieces.router.api.PortConfig;
 import org.webpieces.router.api.RouterConfig;
 import org.webpieces.templating.api.TemplateConfig;
 import org.webpieces.util.file.VirtualFile;
@@ -61,7 +61,7 @@ public class Server {
 			System.exit(1); // should not be needed BUT some 3rd party libraries start non-daemon threads :(
 		}
 	}
-
+	
 	private WebServer webServer;
 
 	public Server(
@@ -94,11 +94,16 @@ public class Server {
 		//You could move these to property files but definitely put some thought if you want people 
 		//randomly changing those properties and restarting the server without going through some testing
 		//by a QA team.  We leave most of these properties right here.
+		
+		//A SECOND note is that some properties can be modified at runtime and so some config objects could be exposed
+		//through JMX or other means for dynamically changing things at runtime
 		RouterConfig routerConfig = new RouterConfig()
 											.setMetaFile(metaFile)
 											.setWebappOverrides(appOverrides)
 											.setWebAppMetaProperties(svrConfig.getWebAppMetaProperties())
-											.setSecretKey(signingKey);
+											.setSecretKey(signingKey)
+											.setPortConfigCallback(() -> fetchPortsForRedirects());
+		
 		WebServerConfig config = new WebServerConfig()
 										.setPlatformOverrides(allOverrides)
 										.setHttpListenAddress(new InetSocketAddress(svrConfig.getHttpPort()))
@@ -111,12 +116,30 @@ public class Server {
 		
 		webServer = WebServerFactory.create(config, routerConfig, templateConfig);
 	}
-
+	
+	PortConfig fetchPortsForRedirects() {
+		//NOTE: You will need to modify this so it detects when you are behind a firewall that has ports exposed to 
+		//customers different than the ports your server exposes
+		boolean useFirewallPorts = false;
+		
+		//NOTE: for running locally and for tests, you must set useFirewallPorts=false
+		
+		int httpPort = 80; //good security teams generally have the firewall on port 80 and your server on something like 8080
+		int httpsPort = 443; //good security teams generally have the firewall on port 443 and your server on something like 8443
+		if(!useFirewallPorts) {
+			//otherwise use the same port the webserver is bound to
+			//this is for running locally AND for local tests
+			httpPort = getUnderlyingHttpChannel().getLocalAddress().getPort();
+			httpsPort = getUnderlyingHttpsChannel().getLocalAddress().getPort();
+		}
+		return new PortConfig(httpPort, httpsPort);
+	}
+	
 	private byte[] fetchKey() {
 		//This is purely so it works before template creation
 		//NOTE: our build runs all template tests that are generated to make sure we don't break template 
 		//generation but for that to work pre-generation, we need this code but you are free to delete it...
-		String base64Key = "/SpiFkS6+JMbUoKxzq9YrCRmLfLSsKpqCzbqS99BjKK4yOkRiAQcgdHXCM281S1Ea+pXlowyegFgtyqxCt1uJA==";  //This gets replaced with a unique key each generated project which you need to keep or replace with your own!!!
+		String base64Key = "LrfnOT5ciYsxvLcgbn4aaiQm19ZbTo4aReqq1R3PNF6NX7vavqjkNXc8NBDWcG2BH4foqGy6lDAGeR6qF7+XnQ==";  //This gets replaced with a unique key each generated project which you need to keep or replace with your own!!!
 		if(base64Key.startsWith("__SECRETKEY"))  //This does not get replaced (user can remove it from template)
 			return base64Key.getBytes();
 		return Base64.getDecoder().decode(base64Key);
@@ -203,8 +226,8 @@ public class Server {
 		//channel.socket().setReceiveBufferSize(size);
 	}
 	
-	public RequestListener start() {
-		return webServer.start();	
+	public void start() {
+		webServer.startSync();
 	}
 
 	public void stop() {

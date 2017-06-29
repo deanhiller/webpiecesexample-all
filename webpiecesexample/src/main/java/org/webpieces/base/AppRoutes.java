@@ -8,9 +8,11 @@ import static org.webpieces.base.examples.ExamplesRouteId.MAIN_ROUTE3;
 import static org.webpieces.base.examples.ExamplesRouteId.REDIRECT_PAGE;
 import static org.webpieces.ctx.api.HttpMethod.GET;
 
-import org.webpieces.router.api.routing.AbstractRouteModule;
+import org.webpieces.router.api.routing.AbstractRoutes;
 
-public class AppRouteModule extends AbstractRouteModule {
+import org.webpieces.base.examples.ExamplesRouteId;
+
+public class AppRoutes extends AbstractRoutes {
 
 	@Override
 	public void configure() {
@@ -24,6 +26,10 @@ public class AppRouteModule extends AbstractRouteModule {
 		//The controller.method is a relative or absolute path with ClassName.method at the end
 		//RouteIds are used to redirect in the webapp itself and must be unique
 		addRoute(GET, "/",              "examples/ExamplesController.index", MAIN_ROUTE);
+		
+		addRoute(GET, "/home",          "crud/login/AppLoginController.index", ExamplesRouteId.HOME);
+		addRoute(GET, "/tags",          "crud/login/AppLoginController.tags", ExamplesRouteId.TAGS);
+
 		addRoute(GET, "/main2",         "/org/webpieces/base/examples/ExamplesController.index", MAIN_ROUTE2);
 		addRoute(GET, "/main3",         "org.webpieces.base.examples.ExamplesController.index", MAIN_ROUTE3);
 
@@ -33,9 +39,10 @@ public class AppRouteModule extends AbstractRouteModule {
 
 		//Add where all the html files exist
 		String workingDir = System.getProperty("user.dir");
-		addStaticDir("/public/", workingDir+"/public/", false);
+		addStaticDir("/assets/", workingDir+"/public/", false);
 		//Add a single file by itself(not really needed)
 		addStaticFile("/favicon.ico", "public/favicon.ico", false);
+		addStaticFile("/test.css", "public/crud/fonts.css", false);
 
 		setPageNotFoundRoute("examples/ExamplesController.notFound");
 		setInternalErrorRoute("examples/ExamplesController.internalError");

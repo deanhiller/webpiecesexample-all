@@ -8,13 +8,18 @@ import static org.webpieces.base.crud.CrudUserRouteId.POST_DELETE_USER;
 import static org.webpieces.base.crud.CrudUserRouteId.POST_USER_FORM;
 
 import org.webpieces.router.api.routing.CrudRouteIds;
-import org.webpieces.router.api.routing.ScopedRouteModule;
+import org.webpieces.router.api.routing.ScopedRoutes;
 
-public class CrudRouteModule extends ScopedRouteModule {
+public class CrudRoutes extends ScopedRoutes {
 
 	@Override
 	protected String getScope() {
-		return "/crud";
+		return "/secure/crud";
+	}
+	
+	@Override
+	protected boolean isHttpsOnlyRoutes() {
+		return true;
 	}
 
 	@Override
@@ -28,7 +33,7 @@ public class CrudRouteModule extends ScopedRouteModule {
 		//addRoute(POST,   "/user/post",        "crud/CrudUserController.postSaveUser", saveRoute);
 		//addRoute(GET,    "/user/confirmdelete/{id}", "crud/CrudUserController.confirmDeleteUser", confirmDelete);
 		//addRoute(POST,   "/user/delete/{id}", "crud/CrudUserController.postDeleteUser", deleteRoute);
-		
+
 		CrudRouteIds routeIds = new CrudRouteIds(
 				LIST_USERS, GET_ADD_USER_FORM, GET_EDIT_USER_FORM,
 				POST_USER_FORM, CONFIRM_DELETE_USER, POST_DELETE_USER);

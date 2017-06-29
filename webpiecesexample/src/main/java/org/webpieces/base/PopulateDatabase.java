@@ -8,14 +8,15 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 
 import org.webpieces.router.api.Startable;
-import org.webpieces.util.logging.Logger;
-import org.webpieces.util.logging.LoggerFactory;
 
+import org.webpieces.base.libs.EducationEnum;
+import org.webpieces.base.libs.RoleEnum;
 import org.webpieces.base.libs.UserDbo;
+import org.webpieces.base.libs.UserRole;
 
 public class PopulateDatabase implements Startable {
 
-	private static final Logger log = LoggerFactory.getLogger(PopulateDatabase.class);
+	//private static final Logger log = LoggerFactory.getLogger(PopulateDatabase.class);
 	private EntityManagerFactory factory;
 
 	@Inject
@@ -48,12 +49,17 @@ public class PopulateDatabase implements Startable {
 		user2.setName("Bob'sName");
 		user2.setFirstName("Bob");
 		user2.setLastName("LastBob");
-		
-		log.info("classloader="+user1.getClass().getClassLoader());
+		user2.setLevelOfEducation(EducationEnum.MIDDLE_SCHOOL);
+
+		UserRole role1 = new UserRole(user2, RoleEnum.DELINQUINT);
+		UserRole role2 = new UserRole(user2, RoleEnum.BADASS);
 		
 		mgr.persist(user1);
 		mgr.persist(user2);
 
+		mgr.persist(role1);
+		mgr.persist(role2);
+		
 		mgr.flush();
 		
 		tx.commit();

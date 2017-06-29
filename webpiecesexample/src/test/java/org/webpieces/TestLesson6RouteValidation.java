@@ -1,14 +1,12 @@
 package org.webpieces;
+
 import java.io.IOException;
 
 import org.junit.Test;
 import org.webpieces.plugins.hibernate.HibernatePlugin;
 import org.webpieces.webserver.test.Asserts;
 
-import org.webpieces.ServerConfig;
-import org.webpieces.Server;
-
-public class TestLesson5RouteValidation {
+public class TestLesson6RouteValidation {
 
 	//This test you should always keep to run during the gradle build.  It can only be run after the
 	//gradle plugin html template compiler is run as it uses a file that is generated to validate all the

@@ -1,5 +1,7 @@
 package org.webpieces;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import org.junit.Test;
 import org.webpieces.ddl.api.JdbcApi;
@@ -8,10 +10,7 @@ import org.webpieces.ddl.api.JdbcFactory;
 import org.webpieces.plugins.hibernate.HibernatePlugin;
 import org.webpieces.webserver.test.Asserts;
 
-import org.webpieces.ServerConfig;
-import org.webpieces.Server;
-
-public class TestLesson3BasicStart {
+public class TestLesson4BasicStart {
 
 	private JdbcApi jdbc = JdbcFactory.create(JdbcConstants.jdbcUrl, JdbcConstants.jdbcUser, JdbcConstants.jdbcPassword);
 	private static String pUnit = HibernatePlugin.PERSISTENCE_TEST_UNIT;
@@ -24,7 +23,7 @@ public class TestLesson3BasicStart {
 	//our http parser and other pieces (which sometimes can catch bugs when you upgrade webpieces
 	// so in some cases, this can be valuable)
 	@Test
-	public void testBasicProdStartup() throws InterruptedException, IOException, ClassNotFoundException {
+	public void testBasicProdStartup() throws InterruptedException, IOException, ClassNotFoundException, ExecutionException, TimeoutException {
 		Asserts.assertWasCompiledWithParamNames("test");
 		
 		//clear in-memory database

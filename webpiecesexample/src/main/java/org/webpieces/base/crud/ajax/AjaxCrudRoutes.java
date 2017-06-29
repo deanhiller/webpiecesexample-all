@@ -1,22 +1,27 @@
 package org.webpieces.base.crud.ajax;
 
 import static org.webpieces.base.crud.ajax.AjaxCrudUserRouteId.AJAX_ADD_USER_FORM;
+import static org.webpieces.base.crud.ajax.AjaxCrudUserRouteId.AJAX_CONFIRM_DELETE_USER;
 import static org.webpieces.base.crud.ajax.AjaxCrudUserRouteId.AJAX_EDIT_USER_FORM;
 import static org.webpieces.base.crud.ajax.AjaxCrudUserRouteId.AJAX_LIST_USERS;
-import static org.webpieces.base.crud.ajax.AjaxCrudUserRouteId.AJAX_CONFIRM_DELETE_USER;
 import static org.webpieces.base.crud.ajax.AjaxCrudUserRouteId.AJAX_POST_DELETE_USER;
 import static org.webpieces.base.crud.ajax.AjaxCrudUserRouteId.AJAX_POST_USER_FORM;
 
 import org.webpieces.router.api.routing.CrudRouteIds;
-import org.webpieces.router.api.routing.ScopedRouteModule;
+import org.webpieces.router.api.routing.ScopedRoutes;
 
-public class AjaxCrudRouteModule extends ScopedRouteModule {
+public class AjaxCrudRoutes extends ScopedRoutes {
 
 	@Override
 	protected String getScope() {
-		return "/ajax";
+		return "/secure/ajax";
 	}
-
+	
+	@Override
+	protected boolean isHttpsOnlyRoutes() {
+		return true;
+	}
+	
 	@Override
 	protected void configure() {
 		//basic crud example(which just calls the same addRoute methods for you for Create/Read/Update/Delete and 
@@ -26,9 +31,8 @@ public class AjaxCrudRouteModule extends ScopedRouteModule {
 		//addRoute(GET ,   "/user/new",         "crud/CrudUserController.userAddEdit", addRoute);
 		//addRoute(GET ,   "/user/edit/{id}",   "crud/CrudUserController.userAddEdit", editRoute);
 		//addRoute(POST,   "/user/post",        "crud/CrudUserController.postSaveUser", saveRoute);
+		//addRoute(GET ,   "/"+entity+"/confirmdelete/{id}", "crud/CrudUserController.confirmDeleteUser", confirmDelete);
 		//addRoute(POST,   "/user/delete/{id}", "crud/CrudUserController.postDeleteUser", deleteRoute);
-		//Not sure on this next one yet as we re-use the post route(it's easier for the webapp developer that way)
-		//XXXX(maybe not this one) addRoute(PUT, "/user/post/{id}",      "crud/CrudUserController.postSaveUser", saveRoute);
 		CrudRouteIds routeIds = new CrudRouteIds(
 				AJAX_LIST_USERS, AJAX_ADD_USER_FORM, AJAX_EDIT_USER_FORM,
 				AJAX_POST_USER_FORM, AJAX_CONFIRM_DELETE_USER, AJAX_POST_DELETE_USER);

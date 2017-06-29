@@ -3,8 +3,6 @@ package org.webpieces;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.webpieces.compiler.api.CompileConfig;
-import org.webpieces.devrouter.api.DevRouterModule;
 import org.webpieces.plugins.hibernate.HibernatePlugin;
 import org.webpieces.templatingdev.api.DevTemplateModule;
 import org.webpieces.templatingdev.api.TemplateCompileConfig;
@@ -14,9 +12,15 @@ import org.webpieces.util.logging.Logger;
 import org.webpieces.util.logging.LoggerFactory;
 
 import com.google.inject.Module;
-import com.google.inject.util.Modules;
 
-public class DevelopmentServer {
+/**
+ * Uses the production Router but the dev template compiler so you 'could' step through prod router code
+ * to see if something is going on
+ * 
+ * TODO: modify this to put gradle groovy template *.class files (ones generated from the html) and then we
+ * could run full production mode from the IDE
+ */
+public class ProdServerForIDE {
 
 	private static final Logger log = LoggerFactory.getLogger(Server.class);
 	
@@ -26,20 +30,20 @@ public class DevelopmentServer {
 	//webserver classes to put in a place a runtime compiler so we can compile your code as you
 	//develop
 	public static void main(String[] args) throws InterruptedException {
-		new DevelopmentServer(false).start();
+		new ProdServerForIDE(false).start();
 		
 		//Since we typically use only 3rd party libraries with daemon threads, that means this
 		//main thread is the ONLY non-daemon thread letting the server keep running so we need
 		//to block it and hold it up from exiting.  Modify this to release if you want an ability
 		//to remotely shutdown....
-		synchronized(DevelopmentServer.class) {
-			DevelopmentServer.class.wait();
+		synchronized(ProdServerForIDE.class) {
+			ProdServerForIDE.class.wait();
 		}
 	}
 	
 	private Server server;
 
-	public DevelopmentServer(boolean usePortZero) {
+	public ProdServerForIDE(boolean usePortZero) {
 		String filePath1 = System.getProperty("user.dir");
 		log.info("running from dir="+filePath1);
 		
@@ -52,30 +56,21 @@ public class DevelopmentServer {
 		srcPaths.add(new VirtualFileImpl(directory+"/webpiecesexample/src/main/java"));
 		srcPaths.add(new VirtualFileImpl(directory+"/webpiecesexample-dev/src/main/java"));
 		
-		VirtualFile metaFile = new VirtualFileImpl(directory + "/webpiecesexample/src/main/resources/appmetadev.txt");
-		log.info("LOADING from meta file="+metaFile.getCanonicalPath());
+//		VirtualFile metaFile = new VirtualFileImpl(directory + "/webpiecesexample/src/main/resources/appmetadev.txt");
+//		log.info("LOADING from meta file="+metaFile.getCanonicalPath());
 		
 		//html and json template file encoding...
 		TemplateCompileConfig templateConfig = new TemplateCompileConfig(srcPaths)
 														.setFileEncoding(Server.ALL_FILE_ENCODINGS);
 		
-		//java source files encoding...
-		CompileConfig devConfig = new CompileConfig(srcPaths)
-										.setFileEncoding(Server.ALL_FILE_ENCODINGS);
-		Module platformOverrides = Modules.combine(
-										new DevRouterModule(devConfig),
-										new DevTemplateModule(templateConfig));
+		Module platformOverrides = new DevTemplateModule(templateConfig);
 		
 		ServerConfig config = new ServerConfig(HibernatePlugin.PERSISTENCE_TEST_UNIT);
-		if(usePortZero) {
-			config.setHttpPort(0);
-			config.setHttpsPort(0);
-		}
 		
 		//It is very important to turn off caching or developers will get very confused when they
 		//change stuff and they don't see changes in the website
 		config.setStaticFileCacheTimeSeconds(null);
-		config.setMetaFile(metaFile);
+		//config.setMetaFile(metaFile);
 		
 		server = new Server(platformOverrides, null, config);
 	}

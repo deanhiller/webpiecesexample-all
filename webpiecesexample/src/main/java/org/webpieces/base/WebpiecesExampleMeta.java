@@ -4,17 +4,22 @@ import java.util.List;
 import java.util.Map;
 
 import org.webpieces.plugins.hibernate.HibernatePlugin;
+import org.webpieces.plugins.json.JacksonPlugin;
 import org.webpieces.router.api.routing.Plugin;
-import org.webpieces.router.api.routing.RouteModule;
+import org.webpieces.router.api.routing.Routes;
 import org.webpieces.router.api.routing.WebAppMeta;
 import org.webpieces.util.logging.Logger;
 import org.webpieces.util.logging.LoggerFactory;
+import org.webpieces.webserver.api.login.LoginRoutes;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Module;
 
-import org.webpieces.base.crud.CrudRouteModule;
-import org.webpieces.base.crud.ajax.AjaxCrudRouteModule;
+import org.webpieces.base.crud.CrudRoutes;
+import org.webpieces.base.crud.ajax.AjaxCrudRoutes;
+import org.webpieces.base.crud.login.LoggedInRoutes;
+import org.webpieces.base.json.JsonCatchAllFilter;
+import org.webpieces.base.json.JsonRoutes;
 
 //This is where the list of Guice Modules go as well as the list of RouterModules which is the
 //core of anything you want to plugin to your web app.  To make re-usable components, you create
@@ -43,11 +48,14 @@ public class WebpiecesExampleMeta implements WebAppMeta {
 	}
 
 	@Override
-    public List<RouteModule> getRouteModules() {
+    public List<Routes> getRouteModules() {
 		return Lists.newArrayList(
-				new CrudRouteModule(),
-				new AjaxCrudRouteModule(),
-				new AppRouteModule()
+				new AppRoutes(),
+				new LoginRoutes("/org/webpieces/base/crud/login/AppLoginController","/secure/.*"),
+				new LoggedInRoutes(),
+				new CrudRoutes(),
+				new AjaxCrudRoutes(),
+				new JsonRoutes()
 				);
 	}
 
@@ -58,7 +66,8 @@ public class WebpiecesExampleMeta implements WebAppMeta {
 				//if you want to remove hibernate, just remove it first from the build file and then remove
 				//all the compile error code(it will remove more than half of the jar size of the web app actually due
 				//to transitive dependencies)
-				new HibernatePlugin(persistenceUnit)
+				new HibernatePlugin(persistenceUnit),
+				new JacksonPlugin("/json/.*", JsonCatchAllFilter.class)
 				);
 	}
 

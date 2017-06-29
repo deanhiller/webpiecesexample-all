@@ -4,6 +4,7 @@ import static org.webpieces.base.crud.CrudUserRouteId.GET_ADD_USER_FORM;
 import static org.webpieces.base.crud.CrudUserRouteId.GET_EDIT_USER_FORM;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
@@ -11,6 +12,7 @@ import javax.persistence.Query;
 
 import org.webpieces.ctx.api.Current;
 import org.webpieces.plugins.hibernate.Em;
+import org.webpieces.plugins.hibernate.UseQuery;
 import org.webpieces.router.api.actions.Action;
 import org.webpieces.router.api.actions.Actions;
 import org.webpieces.router.api.actions.FlashAndRedirect;
@@ -19,7 +21,10 @@ import org.webpieces.router.api.actions.Render;
 import org.webpieces.util.logging.Logger;
 import org.webpieces.util.logging.LoggerFactory;
 
-import org.webpieces.base.libs.UserDbo; 
+import org.webpieces.base.libs.EducationEnum;
+import org.webpieces.base.libs.RoleEnum;
+import org.webpieces.base.libs.UserDbo;
+import org.webpieces.base.libs.UserRole; 
 
 @Singleton
 public class CrudUserController {
@@ -36,14 +41,24 @@ public class CrudUserController {
 	
 	public Action userAddEdit(Integer id) {
 		if(id == null) {
-			return Actions.renderThis("entity", new UserDbo());
+			return Actions.renderThis(
+					"entity", new UserDbo(),
+					"levels", EducationEnum.values(),
+					"roles", RoleEnum.values());
 		}
 		
-		UserDbo user = Em.get().find(UserDbo.class, id);
-		return Actions.renderThis("entity", user);
+		UserDbo user = UserDbo.findWithJoin(Em.get(), id);
+		List<UserRole> roles = user.getRoles();
+		List<RoleEnum> selectedRoles = roles.stream().map(r -> r.getRole()).collect(Collectors.toList());
+		return Actions.renderThis(
+				"entity", user,
+				"levels", EducationEnum.values(),
+				"roles", RoleEnum.values(),
+				"selectedRoles", selectedRoles);
 	}
 
-	public Redirect postSaveUser(UserDbo entity, String password) {
+	public Redirect postSaveUser(@UseQuery("findByIdWithRoleJoin") UserDbo entity, 
+			List<RoleEnum> selectedRoles, String password) {
 		//TODO: if we wire in JSR303 bean validation into the platform, it could be 
 		//done there as well though would
 		//need to figure out how to do i18n for the messages in that case
@@ -52,7 +67,7 @@ public class CrudUserController {
 		} else if(password.length() < 4) {
 			Current.validation().addError("password", "Value is too short");
 		}
-		
+
 		if(entity.getFirstName() == null) {
 			Current.validation().addError("entity.firstName", "First name is required");
 		} else if(entity.getFirstName().length() < 3) {
@@ -71,7 +86,18 @@ public class CrudUserController {
 		
 		Current.flash().setMessage("User successfully saved");
 		Current.flash().keep();
+
+		List<UserRole> roles = entity.getRoles();
+		for(UserRole r : roles) {
+			Em.get().remove(r);
+		}
+		roles.clear();
 		
+		for(RoleEnum r : selectedRoles) {
+			UserRole role = new UserRole(entity, r);
+			Em.get().persist(role);
+		}
+
 		Em.get().merge(entity);
         Em.get().flush();
         
@@ -84,7 +110,12 @@ public class CrudUserController {
 	}
 	
 	public Redirect postDeleteUser(int id) {
-		UserDbo ref = Em.get().getReference(UserDbo.class, id);
+		UserDbo ref = Em.get().find(UserDbo.class, id);
+		List<UserRole> roles = ref.getRoles();
+		for(UserRole r : roles) {
+			Em.get().remove(r);
+		}
+		
 		Em.get().remove(ref);
 		Em.get().flush();
 		Current.flash().setMessage("User deleted");

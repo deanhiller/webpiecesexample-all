@@ -7,7 +7,7 @@ buildscript {
        }
     }
     dependencies {
-        classpath 'org.webpieces:gradle-plugin-htmlcompiler:1.9.45'
+        classpath 'org.webpieces:gradle-plugin-htmlcompiler:1.9.80'
     }
 }
 
@@ -45,6 +45,10 @@ dependencies {
   compile deps['web-webserver']
   //optional plugin for if you use hibernate
   compile deps['plugin-hibernate']
+  //optional plugin for if you have a json api
+  compile deps['plugin-jackson']
+  compile deps['commons-lang'] //used in json escaping
+  
   //REMOVE once you are on a real database
   compile deps['h2db']
   
@@ -85,5 +89,5 @@ startScripts.with {
 compileTemplateSetting {
   //Since the groovy plugin has no way of knowing about your custom tags, list them here or the compile will
   //fail (This catches mispellings and such so you don't release a broken app to production)
-  customTags = [ "mytag", "anothertag" ]
+  customTags = [ "mytag", "anothertag", "id" ]
 }
