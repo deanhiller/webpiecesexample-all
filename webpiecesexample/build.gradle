@@ -20,7 +20,6 @@ sourceSets {
         resources {
             //This ADDS src/main/java/**/*.html and we still read in src/test/resources/**
             srcDirs = ["src/main/java", "src/test/resources"]
-            excludes = ["**/*.java"]
         }
     }
     main {
