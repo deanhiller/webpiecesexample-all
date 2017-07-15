@@ -15,13 +15,15 @@ apply plugin: 'application'
 apply plugin: 'org.webpieces.templatecompiler'
 
 sourceSets {
-    //For debugging in IDE(for tests and server), we need to put the html files on the classpath which are co-located with the controllers
-    //test {
-    //    resources {
-    //        //This ADDS src/main/java/**/*.html and we still read in src/test/resources/**
-    //        //srcDirs = ["src/main/java", "src/test/resources"]
-    //    }
-    //}
+    //For debugging in Intellij IDE only(for tests and server), we need to put the html files on the intellij classpath 
+    //which are co-located with the controllers.  NOTE: gradle nor eclipse need this test/resources code here 
+    //BUT apparently, Intellij is broken now with the latest gradle update
+    test {
+        resources {
+            //This ADDS src/main/java/**/*.html and we still read in src/test/resources/**
+            srcDirs = ["src/main/java", "src/test/resources"]
+        }
+    }
     main {
     	resources {
             //This is so we don't put this in production as it is really only for running prod server in 
