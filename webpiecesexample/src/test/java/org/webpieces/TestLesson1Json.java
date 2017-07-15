@@ -13,6 +13,9 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.webpieces.base.json.SearchRequest;
+import org.webpieces.base.json.SearchResponse;
+import org.webpieces.base.libs.RemoteService;
 import org.webpieces.data.api.DataWrapper;
 import org.webpieces.data.api.DataWrapperGenerator;
 import org.webpieces.data.api.DataWrapperGeneratorFactory;
@@ -26,6 +29,7 @@ import org.webpieces.httpparser.api.dto.HttpRequestLine;
 import org.webpieces.httpparser.api.dto.HttpUri;
 import org.webpieces.httpparser.api.dto.KnownHttpMethod;
 import org.webpieces.httpparser.api.dto.KnownStatusCode;
+import org.webpieces.mock.MockRemoteSystem;
 import org.webpieces.plugins.hibernate.HibernatePlugin;
 import org.webpieces.util.logging.Logger;
 import org.webpieces.util.logging.LoggerFactory;
@@ -36,11 +40,6 @@ import org.webpieces.webserver.test.ResponseWrapper;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
-
-import org.webpieces.base.json.SearchRequest;
-import org.webpieces.base.json.SearchResponse;
-import org.webpieces.base.libs.RemoteService;
-import org.webpieces.mock.MockRemoteSystem;
 
 /**
  * These are working examples of tests that sometimes are better done with the BasicSeleniumTest example but are here for completeness
@@ -69,7 +68,7 @@ public class TestLesson1Json extends AbstractWebpiecesTest {
 		//you may want to create this server ONCE in a static method BUT if you do, also remember to clear out all your
 		//mocks after every test AND you can no longer run single threaded(tradeoffs, tradeoffs)
 		//This is however pretty fast to do in many systems...
-		Server webserver = new Server(getOverrides(isRemote), new AppOverridesModule(), new ServerConfig(pUnit));
+		Server webserver = new Server(getOverrides(isRemote), new AppOverridesModule(), new ServerConfig(pUnit, JavaCache.getCacheLocation()));
 		webserver.start();
 		http11Socket = connectHttp(isRemote, webserver.getUnderlyingHttpChannel().getLocalAddress());
 	}
