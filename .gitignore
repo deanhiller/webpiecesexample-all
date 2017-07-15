@@ -1,6 +1,8 @@
 # never check in class files
 *.class
 
+out/
+
 # eclipse output files
 **/eclipse-output
 **/.project
