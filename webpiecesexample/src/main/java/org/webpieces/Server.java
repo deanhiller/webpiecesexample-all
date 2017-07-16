@@ -202,7 +202,7 @@ public class Server {
 				return filePath; //This occurs when a previous test ran already and set user.dir
 			else if(filePath.endsWith("webpieces")) //
 				return filePath+"/webserver/webpiecesServerBuilder/templateProject/webpiecesexample/src/dist";
-			throw new IllegalStateException("bug, we must have missed an environment="+name);
+			throw new IllegalStateException("bug, we must have missed an environment="+name+" filePath="+filePath);
 		}
 		
 		File bin = new File(f, "bin");
