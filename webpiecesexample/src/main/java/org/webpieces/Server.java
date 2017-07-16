@@ -190,15 +190,16 @@ public class Server {
 	 * - else modify user.dir=myapp to myapp/src/dist
 	 */
 	private String modifyUserDirForManyEnvironmentsImpl(String filePath) {
+		String s = File.separator;
 		File f = new File(filePath);
 		String name = f.getName();
 		if("webpiecesexample-all".equals(name)) {
-			return new File(filePath, "webpiecesexample/src/dist").getAbsolutePath();
+			return new File(filePath, "webpiecesexample"+s+"src"+s+"dist").getAbsolutePath();
 		} else if("webpiecesexample-dev".equals(name)) {
 			File parent = f.getParentFile();
-			return new File(parent, "webpiecesexample/src/dist").getAbsolutePath();
+			return new File(parent, "webpiecesexample"+s+"src"+s+"dist").getAbsolutePath();
 		} else if(!"webpiecesexample".equals(name)) {
-			if(filePath.endsWith("webpiecesexample/src/dist"))
+			if(filePath.endsWith("webpiecesexample"+s+"src"+s+"dist"))
 				return filePath; //This occurs when a previous test ran already and set user.dir
 			else if(filePath.endsWith("webpieces")) //
 				return filePath+"/webserver/webpiecesServerBuilder/templateProject/webpiecesexample/src/dist";
