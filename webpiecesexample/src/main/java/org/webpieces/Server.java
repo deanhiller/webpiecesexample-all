@@ -12,6 +12,7 @@ import org.webpieces.nio.api.channels.TCPServerChannel;
 import org.webpieces.router.api.PortConfig;
 import org.webpieces.router.api.RouterConfig;
 import org.webpieces.templating.api.TemplateConfig;
+import org.webpieces.util.file.FileFactory;
 import org.webpieces.util.file.VirtualFile;
 import org.webpieces.util.file.VirtualFileClasspath;
 import org.webpieces.util.logging.Logger;
@@ -70,8 +71,8 @@ public class Server {
 			ServerConfig svrConfig) {
 		String filePath = System.getProperty("user.dir");
 		log.info("original user.dir before modification="+filePath);
-
-		modifyUserDirForManyEnvironments(filePath);
+		
+		File baseWorkingDir = modifyUserDirForManyEnvironments(filePath);
 
 		VirtualFile metaFile = svrConfig.getMetaFile();
 		//Dev server has to override this
@@ -97,7 +98,7 @@ public class Server {
 		
 		//A SECOND note is that some properties can be modified at runtime and so some config objects could be exposed
 		//through JMX or other means for dynamically changing things at runtime
-		RouterConfig routerConfig = new RouterConfig()
+		RouterConfig routerConfig = new RouterConfig(baseWorkingDir)
 											.setMetaFile(metaFile)
 											.setWebappOverrides(appOverrides)
 											.setWebAppMetaProperties(svrConfig.getWebAppMetaProperties())
@@ -146,10 +147,10 @@ public class Server {
 		return Base64.getDecoder().decode(base64Key);
 	}
 
-	private void modifyUserDirForManyEnvironments(String filePath) {
-		String finalUserDir = modifyUserDirForManyEnvironmentsImpl(filePath);
-		System.setProperty("user.dir", finalUserDir);
-		log.info("RECONFIGURED user.dir="+finalUserDir);
+	private File modifyUserDirForManyEnvironments(String filePath) {
+		File finalUserDir = modifyUserDirForManyEnvironmentsImpl(filePath);
+		log.info("RECONFIGURED user.dir="+finalUserDir.getAbsolutePath());
+		return finalUserDir;
 	}
 
 	/**
@@ -189,21 +190,22 @@ public class Server {
 	 * - else if myapp has directories bin, lib, config, public then do nothing
 	 * - else modify user.dir=myapp to myapp/src/dist
 	 */
-	private String modifyUserDirForManyEnvironmentsImpl(String filePath) {
+	private File modifyUserDirForManyEnvironmentsImpl(String filePath) {
 		String s = File.separator;
+
 		File f = new File(filePath);
 		String name = f.getName();
 		if("webpiecesexample-all".equals(name)) {
-			return new File(filePath, "webpiecesexample"+s+"src"+s+"dist").getAbsolutePath();
+			return FileFactory.newFile(f, "webpiecesexample/src/dist");
 		} else if("webpiecesexample-dev".equals(name)) {
 			File parent = f.getParentFile();
-			return new File(parent, "webpiecesexample"+s+"src"+s+"dist").getAbsolutePath();
+			return FileFactory.newFile(parent, "webpiecesexample/src/dist");
 		} else if(!"webpiecesexample".equals(name)) {
 			if(filePath.endsWith("webpiecesexample"+s+"src"+s+"dist"))
-				return filePath; //This occurs when a previous test ran already and set user.dir
+				return f; //This occurs when a previous test ran already and set user.dir
 			else if(filePath.endsWith("webpieces")) //
-				return filePath+"/webserver/webpiecesServerBuilder/templateProject/webpiecesexample/src/dist";
-			throw new IllegalStateException("bug, we must have missed an environment="+name+" filePath="+filePath);
+				return FileFactory.newFile(f, "webserver/webpiecesServerBuilder/templateProject/webpiecesexample/src/dist");
+			throw new IllegalStateException("bug, we must have missed an environment="+name);
 		}
 		
 		File bin = new File(f, "bin");
@@ -211,10 +213,10 @@ public class Server {
 		File config = new File(f, "config");
 		File publicFile = new File(f, "public");
 		if(bin.exists() && lib.exists() && config.exists() && publicFile.exists()) {
-			return filePath;
+			return f;
 		}
 		
-		return new File(f, "src/dist").getAbsolutePath();
+		return FileFactory.newFile(f, "src/dist");
 	}
 
 	/**
