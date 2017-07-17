@@ -19,13 +19,15 @@ sourceSets {
     //which are co-located with the controllers.  NOTE: gradle nor eclipse need this test/resources code here 
     //BUT apparently, Intellij is broken now with the latest gradle update
     //This used to be purely for intellij but this no longer works either(Intellij is broken :( )
-    //test {
-    //    resources {
-    //        //This ADDS src/main/java/**/*.html and we still read in src/test/resources/**
-    //        srcDirs = ["src/main/java", "src/test/resources"]
-    //        excludes = ["**/*.java"]
-    //    }
-    //}
+    test {
+        resources {
+            //This ADDS src/main/java/**/*.html and we still read in src/test/resources/**
+            srcDirs = ["src/main/java", "src/test/resources"]
+
+            //This line will break eclipse now that we updated to gradle 4 :( ....
+            //excludes = ["**/*.java"]
+        }
+    }
     main {
     	resources {
             //This is so we don't put this in production as it is really only for running prod server in 
