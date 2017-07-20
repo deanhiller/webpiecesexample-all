@@ -71,7 +71,7 @@ public class Server {
 			ServerConfig svrConfig) {
 		String filePath = System.getProperty("user.dir");
 		log.info("original user.dir before modification="+filePath);
-		
+
 		File baseWorkingDir = modifyUserDirForManyEnvironments(filePath);
 
 		VirtualFile metaFile = svrConfig.getMetaFile();
@@ -148,8 +148,9 @@ public class Server {
 	}
 
 	private File modifyUserDirForManyEnvironments(String filePath) {
-		File finalUserDir = modifyUserDirForManyEnvironmentsImpl(filePath);
-		log.info("RECONFIGURED user.dir="+finalUserDir.getAbsolutePath());
+		File file = new File(filePath);
+		File finalUserDir = modifyUserDirForManyEnvironmentsImpl(file);
+		log.info("RECONFIGURED working directory(based off user.dir)="+finalUserDir.getAbsolutePath()+" previous user.dir="+file.getAbsolutePath());
 		return finalUserDir;
 	}
 
@@ -190,8 +191,10 @@ public class Server {
 	 * - else if myapp has directories bin, lib, config, public then do nothing
 	 * - else modify user.dir=myapp to myapp/src/dist
 	 */
-	private File modifyUserDirForManyEnvironmentsImpl(String filePath) {
-		File f = new File(filePath);
+	private File modifyUserDirForManyEnvironmentsImpl(File f) {
+		char s = File.separatorChar;
+		if(!f.isAbsolute())
+			throw new IllegalStateException("File passed in must be absolute and was not.  path="+f.getPath());
 		String name = f.getName();
 		if("webpiecesexample-all".equals(name)) {
 			return FileFactory.newFile(f, "webpiecesexample/src/dist");
@@ -199,9 +202,9 @@ public class Server {
 			File parent = f.getParentFile();
 			return FileFactory.newFile(parent, "webpiecesexample/src/dist");
 		} else if(!"webpiecesexample".equals(name)) {
-			if(filePath.endsWith("webpiecesexample/src/dist"))
+			if(f.getAbsolutePath().endsWith("webpiecesexample"+s+"src"+s+"dist"))
 				return f; //This occurs when a previous test ran already and set user.dir
-			else if(filePath.endsWith("webpieces")) //
+			else if(name.equals("webpieces"))
 				return FileFactory.newFile(f, "webserver/webpiecesServerBuilder/templateProject/webpiecesexample/src/dist");
 			throw new IllegalStateException("bug, we must have missed an environment="+name);
 		}
