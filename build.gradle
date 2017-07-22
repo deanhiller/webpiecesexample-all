@@ -7,7 +7,7 @@ ext {
 
     //Modify here AND gradle webieces plugin version in file 
     // webpiecesexample/build.gradle
-    //This version works with 1.9.88
+    //This version works with 1.9.90 (ver 89 release skipped due to sonas repo failures)
     webpiecesVersion = '1.9-developer'
 
     /*
