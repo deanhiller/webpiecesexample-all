@@ -141,16 +141,16 @@ public class Server {
 		//This is purely so it works before template creation
 		//NOTE: our build runs all template tests that are generated to make sure we don't break template 
 		//generation but for that to work pre-generation, we need this code but you are free to delete it...
-		String base64Key = "LrfnOT5ciYsxvLcgbn4aaiQm19ZbTo4aReqq1R3PNF6NX7vavqjkNXc8NBDWcG2BH4foqGy6lDAGeR6qF7+XnQ==";  //This gets replaced with a unique key each generated project which you need to keep or replace with your own!!!
+		String base64Key = "0InUgoXb6dlDlUqeELauSqHe/R5Rvv6dER0za7FU85R4MTcx4BtzkWFuMZZHrAIzlvA8O58pL2V4CwQ6aO6XYg==";  //This gets replaced with a unique key each generated project which you need to keep or replace with your own!!!
 		if(base64Key.startsWith("__SECRETKEY"))  //This does not get replaced (user can remove it from template)
 			return base64Key.getBytes();
 		return Base64.getDecoder().decode(base64Key);
 	}
 
 	private File modifyUserDirForManyEnvironments(String filePath) {
-		File file = new File(filePath);
-		File finalUserDir = modifyUserDirForManyEnvironmentsImpl(file);
-		log.info("RECONFIGURED working directory(based off user.dir)="+finalUserDir.getAbsolutePath()+" previous user.dir="+file.getAbsolutePath());
+		File absPath = FileFactory.newAbsoluteFile(filePath);
+		File finalUserDir = modifyUserDirForManyEnvironmentsImpl(absPath);
+		log.info("RECONFIGURED working directory(based off user.dir)="+finalUserDir.getAbsolutePath()+" previous user.dir="+filePath);
 		return finalUserDir;
 	}
 
@@ -191,33 +191,33 @@ public class Server {
 	 * - else if myapp has directories bin, lib, config, public then do nothing
 	 * - else modify user.dir=myapp to myapp/src/dist
 	 */
-	private File modifyUserDirForManyEnvironmentsImpl(File f) {
-		char s = File.separatorChar;
-		if(!f.isAbsolute())
-			throw new IllegalStateException("File passed in must be absolute and was not.  path="+f.getPath());
-		String name = f.getName();
+	private File modifyUserDirForManyEnvironmentsImpl(File filePath) {
+		if(!filePath.isAbsolute())
+			throw new IllegalArgumentException("If filePath is not absolute, you will have trouble working in all environments in the comment above. path="+filePath.getPath());
+		
+		String name = filePath.getName();
 		if("webpiecesexample-all".equals(name)) {
-			return FileFactory.newFile(f, "webpiecesexample/src/dist");
+			return FileFactory.newFile(filePath, "webpiecesexample/src/dist");
 		} else if("webpiecesexample-dev".equals(name)) {
-			File parent = f.getParentFile();
+			File parent = filePath.getParentFile();
 			return FileFactory.newFile(parent, "webpiecesexample/src/dist");
 		} else if(!"webpiecesexample".equals(name)) {
-			if(f.getAbsolutePath().endsWith("webpiecesexample"+s+"src"+s+"dist"))
-				return f; //This occurs when a previous test ran already and set user.dir
+			if(FileFactory.endsWith(filePath, "webpiecesexample/src/dist"))
+				return filePath; //This occurs when a previous test ran already and set user.dir
 			else if(name.equals("webpieces"))
-				return FileFactory.newFile(f, "webserver/webpiecesServerBuilder/templateProject/webpiecesexample/src/dist");
-			throw new IllegalStateException("bug, we must have missed an environment="+name);
+				return FileFactory.newFile(filePath, "webserver/webpiecesServerBuilder/templateProject/webpiecesexample/src/dist");
+			throw new IllegalStateException("bug, we must have missed an environment="+name+" full path="+filePath);
 		}
 		
-		File bin = new File(f, "bin");
-		File lib = new File(f, "lib");
-		File config = new File(f, "config");
-		File publicFile = new File(f, "public");
+		File bin = FileFactory.newFile(filePath, "bin");
+		File lib = FileFactory.newFile(filePath, "lib");
+		File config = FileFactory.newFile(filePath, "config");
+		File publicFile = FileFactory.newFile(filePath, "public");
 		if(bin.exists() && lib.exists() && config.exists() && publicFile.exists()) {
-			return f;
+			return filePath;
 		}
 		
-		return FileFactory.newFile(f, "src/dist");
+		return FileFactory.newFile(filePath, "src/dist");
 	}
 
 	/**
