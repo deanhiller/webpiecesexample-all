@@ -9,7 +9,7 @@ ext {
     // webpiecesexample/build.gradle
 
     //This version works with 1.9.92 (ver 91 release skipped due to sonas repo failures)
-    webpiecesVersion = '1.9.92'
+    webpiecesVersion = '1.9-developer'
 
     /*
      * Dependencies can be named so that sub-projects can reference consistent version of them.
