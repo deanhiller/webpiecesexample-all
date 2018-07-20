@@ -1,6 +1,7 @@
 package org.webpieces.base;
 
 import org.webpieces.router.api.ObjectStringConverter;
+import org.webpieces.router.api.SimpleStorage;
 import org.webpieces.router.api.Startable;
 
 import com.google.inject.Binder;
@@ -11,6 +12,7 @@ import org.webpieces.base.libs.EducationEnum;
 import org.webpieces.base.libs.RemoteService;
 import org.webpieces.base.libs.RemoteServiceImpl;
 import org.webpieces.base.libs.RoleEnum;
+import org.webpieces.base.libs.SimpleStorageImpl;
 import org.webpieces.base.libs.SomeLibrary;
 import org.webpieces.base.libs.SomeLibraryImpl;
 
@@ -32,6 +34,8 @@ public class GuiceModule implements Module {
 		conversionBinder.addBinding().to(EducationEnum.WebConverter.class);
 		conversionBinder.addBinding().to(RoleEnum.WebConverter.class);
 	    
+		binder.bind(SimpleStorage.class).to(SimpleStorageImpl.class);
+		
 	    binder.bind(SomeLibrary.class).to(SomeLibraryImpl.class);
 	    binder.bind(RemoteService.class).to(RemoteServiceImpl.class);
 	}
