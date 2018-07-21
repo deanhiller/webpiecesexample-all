@@ -1,4 +1,4 @@
-package WEBPIECESxPACKAGE;
+package org.webpieces;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

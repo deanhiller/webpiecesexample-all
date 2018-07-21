@@ -8,7 +8,9 @@ import org.webpieces.base.crud.ajax.AjaxCrudRoutes;
 import org.webpieces.base.crud.login.LoginRoutes;
 import org.webpieces.base.json.JsonCatchAllFilter;
 import org.webpieces.base.json.JsonRoutes;
+import org.webpieces.plugins.hibernate.HibernateConfig;
 import org.webpieces.plugins.hibernate.HibernatePlugin;
+import org.webpieces.plugins.json.JacksonConfig;
 import org.webpieces.plugins.json.JacksonPlugin;
 import org.webpieces.router.api.routing.Plugin;
 import org.webpieces.router.api.routing.Routes;
@@ -63,8 +65,8 @@ public class WebpiecesExampleMeta implements WebAppMeta {
 				//if you want to remove hibernate, just remove it first from the build file and then remove
 				//all the compile error code(it will remove more than half of the jar size of the web app actually due
 				//to transitive dependencies)
-				new HibernatePlugin(persistenceUnit),
-				new JacksonPlugin("/json/.*", JsonCatchAllFilter.class)
+				new HibernatePlugin(new HibernateConfig(persistenceUnit)),
+				new JacksonPlugin(new JacksonConfig("/json/.*", JsonCatchAllFilter.class))
 				);
 	}
 
