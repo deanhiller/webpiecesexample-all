@@ -41,19 +41,19 @@ public class AppLoginController extends AbstractLoginController {
 	public Render index() {
 		return Actions.renderThis();
 	}
-	
-    @Override
-    protected String getLoginSessionKey() {
-            return TOKEN;
-    }
 
-    @Override
-    protected RouteId getRenderLoginRoute() {
-            return LoginRouteId.LOGIN;
-    }
+	@Override
+	protected String getLoginSessionKey() {
+		return TOKEN;
+	}
 
-    @Override
-    protected RouteId getRenderAfterLoginHome() {
-            return LoginRouteId.LOGGED_IN_HOME;
-    }
+	@Override
+	protected RouteId getRenderLoginRoute() {
+		return LoginRouteId.LOGIN;
+	}
+
+	@Override
+	protected RouteId getRenderAfterLoginHome() {
+		return LoginRouteId.LOGGED_IN_HOME;
+	}
 }

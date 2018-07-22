@@ -3,15 +3,14 @@ package org.webpieces.base;
 import java.util.List;
 import java.util.Map;
 
-import org.webpieces.base.crud.CrudRoutes;
-import org.webpieces.base.crud.ajax.AjaxCrudRoutes;
-import org.webpieces.base.crud.login.LoginRoutes;
-import org.webpieces.base.json.JsonCatchAllFilter;
-import org.webpieces.base.json.JsonRoutes;
+import org.webpieces.plugins.backend.BackendConfig;
+import org.webpieces.plugins.backend.BackendPlugin;
 import org.webpieces.plugins.hibernate.HibernateConfig;
 import org.webpieces.plugins.hibernate.HibernatePlugin;
 import org.webpieces.plugins.json.JacksonConfig;
 import org.webpieces.plugins.json.JacksonPlugin;
+import org.webpieces.plugins.sslcert.InstallSslCertConfig;
+import org.webpieces.plugins.sslcert.InstallSslCertPlugin;
 import org.webpieces.router.api.routing.Plugin;
 import org.webpieces.router.api.routing.Routes;
 import org.webpieces.router.api.routing.WebAppMeta;
@@ -20,6 +19,12 @@ import org.webpieces.util.logging.LoggerFactory;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Module;
+
+import org.webpieces.base.crud.CrudRoutes;
+import org.webpieces.base.crud.ajax.AjaxCrudRoutes;
+import org.webpieces.base.crud.login.LoginRoutes;
+import org.webpieces.base.json.JsonCatchAllFilter;
+import org.webpieces.base.json.JsonRoutes;
 
 //This is where the list of Guice Modules go as well as the list of RouterModules which is the
 //core of anything you want to plugin to your web app.  To make re-usable components, you create
@@ -30,6 +35,7 @@ import com.google.inject.Module;
 public class WebpiecesExampleMeta implements WebAppMeta {
 
 	private static final Logger log = LoggerFactory.getLogger(WebpiecesExampleMeta.class);
+	public static final String BACKEND_PATH = "/backend1";
 	private String persistenceUnit;
 
 	@Override
@@ -51,13 +57,16 @@ public class WebpiecesExampleMeta implements WebAppMeta {
     public List<Routes> getRouteModules() {
 		return Lists.newArrayList(
 				new AppRoutes(),
-				new LoginRoutes("/org/webpieces/base/crud/login/AppLoginController","/secure/.*"),
+				new LoginRoutes("/org/webpieces/base/crud/login/AppLoginController", "/secure/.*"),
 				new CrudRoutes(),
 				new AjaxCrudRoutes(),
 				new JsonRoutes()
 				);
 	}
 
+	//NOTE: EACH Plugin takes a Config object such that we can add properties later without breaking your compile
+	//This allows us to be more backwards compatible
+	
 	@Override
 	public List<Plugin> getPlugins() {
 		log.info("classloader for meta="+this.getClass().getClassLoader());
@@ -66,7 +75,9 @@ public class WebpiecesExampleMeta implements WebAppMeta {
 				//all the compile error code(it will remove more than half of the jar size of the web app actually due
 				//to transitive dependencies)
 				new HibernatePlugin(new HibernateConfig(persistenceUnit)),
-				new JacksonPlugin(new JacksonConfig("/json/.*", JsonCatchAllFilter.class))
+				new JacksonPlugin(new JacksonConfig("/json/.*", JsonCatchAllFilter.class)),
+				new BackendPlugin(new BackendConfig()),
+				new InstallSslCertPlugin(new InstallSslCertConfig("acme://letsencrypt.org/staging"))
 				);
 	}
 

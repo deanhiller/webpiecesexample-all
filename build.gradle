@@ -8,7 +8,7 @@ ext {
     //Modify here AND gradle webieces plugin version in file 
     // webpiecesexample/build.gradle
 
-    //This version works with 1.9.92 (ver 91 release skipped due to sonas repo failures)
+    //This version works with 1.9.104
     webpiecesVersion = '1.9-developer'
 
     /*
@@ -27,7 +27,8 @@ ext {
        'core-mock':          "org.webpieces:core-mock:${webpiecesVersion}",
        'core-ddl':           "org.webpieces:core-ddl:${webpiecesVersion}",
        'plugin-hibernate':   "org.webpieces:plugin-hibernate:${webpiecesVersion}",
-       'plugin-install-sslcert':"org.webpieces:plugin-install-sslcert:${webpiecesVersion}",
+       'plugin-backend':     "org.webpieces:plugin-backend:${webpiecesVersion}",
+       'plugin-install-sslcert': "org.webpieces:plugin-install-sslcert:${webpiecesVersion}", 
        'plugin-jackson':     "org.webpieces:plugin-json-jackson:${webpiecesVersion}",
        'commons-lang':       "org.apache.commons:commons-lang3:3.5",
        
