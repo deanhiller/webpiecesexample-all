@@ -65,13 +65,13 @@ THE ONE LINE bootstrapModal tag for the EDIT button replaces the following...
 
   <script type="text/javascript">
       var getEditRoute= #{jsAction @[AJAX_EDIT_USER_FORM, id:'{id}']@ /}#
-       $(document).ready(function() {	
+       $(document).ready(function() {   
            $("#editLink_${entity.id}$").click(function(e){
                $('#addEditModal').load(getEditRoute({id:${entity.id}$}),function(){
-                   $("#addEditModal").modal('show');	
+                   $("#addEditModal").modal('show');    
                 });
            });
- 	    });
+        });
   </script>
 
                       
@@ -79,10 +79,10 @@ ABOVE ADD BUTTON IS THE SAME AS THIS.....
 
 <script type="text/javascript">
 var getAddRoute= #{jsAction @[AJAX_ADD_USER_FORM]@ /}#
-$(document).ready(function() {	
+$(document).ready(function() {  
      $("#addLink").click(function(e){
          $('#addEditModal').load(getAddRoute(),function(){
-              $("#addEditModal").modal('show');	
+              $("#addEditModal").modal('show'); 
          });
      });
 });
@@ -91,10 +91,10 @@ $(document).ready(function() {
                    
 <script type="text/javascript">
  var getConfirmDeleteRoute = #{jsAction @[AJAX_CONFIRM_DELETE_USER, id:'{id}']@ /}#
- $(document).ready(function() {	
+ $(document).ready(function() { 
      $("#deletePattern_${entity.id}$").click(function(e){
          $('#deleteDiv').load(getConfirmDeleteRoute({id:'${entity.id}$'}),function(){
-              $("#deleteModal").modal('show');	
+              $("#deleteModal").modal('show');  
          });
      });
 });

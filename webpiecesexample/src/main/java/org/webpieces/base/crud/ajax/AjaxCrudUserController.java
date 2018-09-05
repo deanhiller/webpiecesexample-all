@@ -38,11 +38,15 @@ public class AjaxCrudUserController {
 	
 	public Action userAddEdit(Integer id) {		
 		if(id == null) {
-			return Actions.renderThis("entity", new UserDbo());
+			return Actions.renderThis(
+					"entity", new UserDbo(),
+					"password", null);
 		}
 		
 		UserDbo user = Em.get().find(UserDbo.class, id);
-		return Actions.renderThis("entity", user);
+		return Actions.renderThis(
+				"entity", user,
+				"password", null);
 	}
 
 	public Redirect postSaveUser(UserDbo entity, String password) {

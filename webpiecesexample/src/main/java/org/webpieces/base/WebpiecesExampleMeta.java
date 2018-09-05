@@ -57,7 +57,7 @@ public class WebpiecesExampleMeta implements WebAppMeta {
     public List<Routes> getRouteModules() {
 		return Lists.newArrayList(
 				new AppRoutes(),
-				new LoginRoutes("/org/webpieces/base/crud/login/AppLoginController", "/secure/.*"),
+				new LoginRoutes("/org/webpieces/base/crud/login/AppLoginController", "/secure/.*", "password"),
 				new CrudRoutes(),
 				new AjaxCrudRoutes(),
 				new JsonRoutes()
