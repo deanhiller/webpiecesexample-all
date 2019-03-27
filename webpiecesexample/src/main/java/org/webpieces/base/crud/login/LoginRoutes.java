@@ -1,5 +1,7 @@
 package org.webpieces.base.crud.login;
 
+import static org.webpieces.router.api.routing.Port.HTTPS;
+
 import org.webpieces.ctx.api.HttpMethod;
 import org.webpieces.router.api.routing.RouteId;
 import org.webpieces.router.api.routing.Router;
@@ -43,9 +45,9 @@ public class LoginRoutes extends AbstractLoginRoutes {
 	}
 
 	@Override
-	protected void addLoggedInHome(Router httpsRouter) {
-		Router scopedRouter = httpsRouter.getScopedRouter("/secure", true);
-		scopedRouter.addRoute(HttpMethod.GET ,   "/loggedinhome",        "AppLoginController.home", LoginRouteId.LOGGED_IN_HOME);
+	protected void addLoggedInHome(Router baseRouter, Router scopedRouter) {
+		Router scopedRouter2 = baseRouter.getScopedRouter("/secure");
+		scopedRouter2.addRoute(HTTPS, HttpMethod.GET ,   "/loggedinhome",        "AppLoginController.home", LoginRouteId.LOGGED_IN_HOME);
 	}
 
 }

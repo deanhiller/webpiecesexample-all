@@ -6,8 +6,10 @@ import static org.webpieces.base.crud.CrudUserRouteId.GET_EDIT_USER_FORM;
 import static org.webpieces.base.crud.CrudUserRouteId.LIST_USERS;
 import static org.webpieces.base.crud.CrudUserRouteId.POST_DELETE_USER;
 import static org.webpieces.base.crud.CrudUserRouteId.POST_USER_FORM;
+import static org.webpieces.router.api.routing.Port.HTTPS;
 
 import org.webpieces.router.api.routing.CrudRouteIds;
+import org.webpieces.router.api.routing.Router;
 import org.webpieces.router.api.routing.ScopedRoutes;
 
 public class CrudRoutes extends ScopedRoutes {
@@ -18,12 +20,7 @@ public class CrudRoutes extends ScopedRoutes {
 	}
 	
 	@Override
-	protected boolean isHttpsOnlyRoutes() {
-		return true;
-	}
-
-	@Override
-	protected void configure() {
+	protected void configure(Router baseRouter, Router scopedRouter) {
 		//basic crud example(which just calls the same addRoute methods for you for Create/Read/Update/Delete and 
 		//the GET render page views as well)
 		//it adds all these routes for you in one method call
@@ -37,7 +34,7 @@ public class CrudRoutes extends ScopedRoutes {
 		CrudRouteIds routeIds = new CrudRouteIds(
 				LIST_USERS, GET_ADD_USER_FORM, GET_EDIT_USER_FORM,
 				POST_USER_FORM, CONFIRM_DELETE_USER, POST_DELETE_USER);
-		addCrud("user", "CrudUserController", routeIds);
+		scopedRouter.addCrud(HTTPS, "user", "CrudUserController", routeIds);
 	}
 
 }
