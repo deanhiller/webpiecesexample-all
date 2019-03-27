@@ -6,9 +6,9 @@ import static org.webpieces.base.crud.CrudUserRouteId.GET_EDIT_USER_FORM;
 import static org.webpieces.base.crud.CrudUserRouteId.LIST_USERS;
 import static org.webpieces.base.crud.CrudUserRouteId.POST_DELETE_USER;
 import static org.webpieces.base.crud.CrudUserRouteId.POST_USER_FORM;
-import static org.webpieces.router.api.routing.Port.HTTPS;
 
 import org.webpieces.router.api.routing.CrudRouteIds;
+import org.webpieces.router.api.routing.Port;
 import org.webpieces.router.api.routing.Router;
 import org.webpieces.router.api.routing.ScopedRoutes;
 
@@ -34,7 +34,7 @@ public class CrudRoutes extends ScopedRoutes {
 		CrudRouteIds routeIds = new CrudRouteIds(
 				LIST_USERS, GET_ADD_USER_FORM, GET_EDIT_USER_FORM,
 				POST_USER_FORM, CONFIRM_DELETE_USER, POST_DELETE_USER);
-		scopedRouter.addCrud(HTTPS, "user", "CrudUserController", routeIds);
+		scopedRouter.addCrud(Port.HTTPS, "user", "CrudUserController", routeIds);
 	}
 
 }

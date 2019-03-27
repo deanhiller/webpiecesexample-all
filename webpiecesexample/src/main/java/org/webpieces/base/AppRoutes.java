@@ -7,17 +7,17 @@ import static org.webpieces.base.examples.ExamplesRouteId.MAIN_ROUTE2;
 import static org.webpieces.base.examples.ExamplesRouteId.MAIN_ROUTE3;
 import static org.webpieces.base.examples.ExamplesRouteId.REDIRECT_PAGE;
 import static org.webpieces.ctx.api.HttpMethod.GET;
-import static org.webpieces.router.api.routing.Port.BOTH;
 
-import org.webpieces.base.examples.ExamplesRouteId;
 import org.webpieces.router.api.routing.Router;
 import org.webpieces.router.api.routing.Routes;
+
+import org.webpieces.base.examples.ExamplesRouteId;
+import static org.webpieces.router.api.routing.Port.BOTH;
 
 public class AppRoutes implements Routes {
 
 	@Override
 	public void configure(Router router) {
-		
 		//You can always do a platform override on ControllerResolver.java as well to resolve the controller String in some other
 		//way.  The controller string is the 3rd parameter in the addRoute calls
 		
