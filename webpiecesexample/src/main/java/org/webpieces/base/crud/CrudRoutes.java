@@ -9,8 +9,9 @@ import static org.webpieces.base.crud.CrudUserRouteId.POST_USER_FORM;
 
 import org.webpieces.router.api.routing.CrudRouteIds;
 import org.webpieces.router.api.routing.Port;
-import org.webpieces.router.api.routing.Router;
 import org.webpieces.router.api.routing.ScopedRoutes;
+import org.webpieces.router.impl.model.bldr.RouteBuilder;
+import org.webpieces.router.impl.model.bldr.ScopedRouteBuilder;
 
 public class CrudRoutes extends ScopedRoutes {
 
@@ -20,7 +21,7 @@ public class CrudRoutes extends ScopedRoutes {
 	}
 	
 	@Override
-	protected void configure(Router baseRouter, Router scopedRouter) {
+	protected void configure(RouteBuilder baseRouter, ScopedRouteBuilder scopedRouter) {
 		//basic crud example(which just calls the same addRoute methods for you for Create/Read/Update/Delete and 
 		//the GET render page views as well)
 		//it adds all these routes for you in one method call

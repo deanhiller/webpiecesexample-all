@@ -4,13 +4,15 @@ import static org.webpieces.ctx.api.HttpMethod.GET;
 import static org.webpieces.ctx.api.HttpMethod.POST;
 import static org.webpieces.router.api.routing.Port.BOTH;
 
-import org.webpieces.router.api.routing.Router;
 import org.webpieces.router.api.routing.Routes;
+import org.webpieces.router.impl.model.bldr.DomainRouteBuilder;
+import org.webpieces.router.impl.model.bldr.RouteBuilder;
 
 public class JsonRoutes implements Routes {
 
 	@Override
-	public void configure(Router router) {
+	public void configure(DomainRouteBuilder domainRouteBldr) {
+		RouteBuilder router = domainRouteBldr.getAllDomainsRouteBuilder();
 		
 		router.addContentRoute(BOTH, GET , "/json/read",         "JsonController.readOnly");
 
