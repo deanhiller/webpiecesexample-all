@@ -5,12 +5,6 @@
 
 ext {
 
-    //Modify here AND gradle webieces plugin version in file 
-    // webpiecesexample/build.gradle
-
-    //This version ACTUALLY works with what the git commit says it works with!!!
-    webpiecesVersion = '1.9-developer'
-
     /*
      * Dependencies can be named so that sub-projects can reference consistent version of them.
      * dependencies {
