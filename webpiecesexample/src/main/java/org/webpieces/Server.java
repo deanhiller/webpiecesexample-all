@@ -159,69 +159,79 @@ public class Server {
 	}
 
 	/**
-	 * I like things to work seamlessly but user.dir is a huge issue in multiple environments I am working in.
-	 * main server has to work in N configurations that should be tested and intellij is a PITA since
-	 * it is inconsistent.  PP means runs in the project the file is in and eclipse is consistent with
-	 * gradle while intellij is only half the time....
-	 * 
-	 * app dev - The environment when you generate a project and import it into an IDE
-	 * webpieces - The environment where you test the template directly when bringing in webpieces into an IDE
-	 * 
-	 * 
-	 * * app dev / eclipse -
-	 *    * PP - running myapp/src/tests - user.dir=myapp-all/myapp
-	 *    * PP - DevServer - user.dir=myapp-all/myapp-dev
-	 *    * PP - SemiProductionServer - user.dir=myapp-all/myapp-dev
-	 *    * PP - ProdServer - user.dir=myapp-all/myapp
-	 * * app dev / intellij (it's different paths than eclipse :( ).  user.dir starts as myapp directory
-	 *    * PP - running myapp/src/tests - myapp-all/myapp
-	 *    * NO - DevServer - user.dir=myapp-all :( what the hell!  different from running tests
-	 *    * NO - SemiProductionServer - user.dir=myapp-all
-	 *    * NO - ProdServer - user.dir=myapp-all
-	 * * webpieces / eclipse - same as app dev because eclipse is nice in this aspect
-	 * * webpieces / intellij - ANNOYING and completely different.  Runs out of webpieces a few levels down from actual subproject
-	 * * PP - tests in webpieces gradle - myapp-all/myapp
-	 * * PP - tests in myapp's gradle run - myapp-all/myapp
-	 * * NO - production - user.dir=from distribution myapp directory which has subdirs bin, lib, config, public
-	 * * Future? - run DevSvr,SemiProdSvr,ProdSvr from gradle?....screw that for now..it's easy to run from IDE so why bother(it may just work though too)
-	 * 
-	 * - so in production, the relative paths work from myapp so 'public/' is a valid location for html files resolving to myapp/public
-	 * - in testing, IF we want myapp-all/myapp/src/dist/public involved, it would be best to run from myapp-all/myapp/src/dist so 'public/' is still a valid location
-	 * - in devserver, semiprodserver, and prod server, the same idea follows where myapp-all/myapp/src/dist should be the user.dir!!!
-	 * 
-	 * - sooooo, algorithm is this
-	 * - if user.dir=myapp-all, modify user.dir to myapp-all/myapp/src/dist (you are in intellij)
-	 * - else if user.dir=myapp-dev, modify to ../myapp/src/dist
-	 * - else if myapp has directories bin, lib, config, public then do nothing
-	 * - else modify user.dir=myapp to myapp/src/dist
+	 * I like things to work seamlessly but user.dir is a huge issue in multiple environments...and Intellij makes it
+	 * harder by giving servers a different user.dir than tests even though they are in the same subproject!!
+	 *
+	 * Format of comments BELOW in if/else statements is like this
+	 *
+	 * {type}-{isWebpieces}-{IDE or Container}-{subprojectName}
+	 *
+	 * where type=Test or MainApp (Intellij changes the user.dir for tests vs. mainapp!!  DAMNIT Intellij)
+	 * IDE=Intellij, Eclipse, Gradle, Production
+	 * isWebpieces is whether it was a generated project or is the template itself.  ie. you can run tests
+	 *     if you clone https://github.com/deanhiller/webpieces inside the IDE without needing to
+	 *     generate a fake project BUT we need to know which directory it runs for (MAINLY Intellij screwup again)
+	 *     isWebpieces is a major convenience for webpieces developers to test changes to templates and
+	 *     debug them but DOES NOT need to be part of your project actually so could be deleted.
 	 */
 	private File modifyUserDirForManyEnvironmentsImpl(File filePath) {
 		if(!filePath.isAbsolute())
 			throw new IllegalArgumentException("If filePath is not absolute, you will have trouble working in all environments in the comment above. path="+filePath.getPath());
-		
+
 		String name = filePath.getName();
-		if("webpiecesexample-all".equals(name)) {
-			return FileFactory.newFile(filePath, "webpiecesexample/src/dist");
-		} else if("webpiecesexample-dev".equals(name)) {
-			File parent = filePath.getParentFile();
-			return FileFactory.newFile(parent, "webpiecesexample/src/dist");
-		} else if(!"webpiecesexample".equals(name)) {
-			if(FileFactory.endsWith(filePath, "webpiecesexample/src/dist"))
-				return filePath; //This occurs when a previous test ran already and set user.dir
-			else if(name.equals("webpieces"))
-				return FileFactory.newFile(filePath, "webserver/webpiecesServerBuilder/templateProject/webpiecesexample/src/dist");
-			throw new IllegalStateException("bug, we must have missed an environment="+name+" full path="+filePath);
-		}
-		
+
+		File locatorFile1 = FileFactory.newFile(filePath, "locatorFile.txt");
+		File locatorFile2 = FileFactory.newFile(filePath, "xLocatorFile.txt");
+
 		File bin = FileFactory.newFile(filePath, "bin");
 		File lib = FileFactory.newFile(filePath, "lib");
 		File config = FileFactory.newFile(filePath, "config");
 		File publicFile = FileFactory.newFile(filePath, "public");
 		if(bin.exists() && lib.exists() && config.exists() && publicFile.exists()) {
+			//For ->
+			//    MainApp | NO  | Production | N/A
+			log.info("Running in production environment");
 			return filePath;
+		} else if("webpiecesexample-dev".equals(name)) {
+			//    Test    | NO  | Intellij   | webpiecesexample-all/webpiecesexample-dev
+			//    Test    | YES | Intellij   | webpiecesexample-all/webpiecesexample-dev
+			//    Test    | NO  | Gradle     | webpiecesexample-all/webpiecesexample-dev
+			//    Test    | YES | Gradle     | webpiecesexample-all/webpiecesexample-dev
+			//    MainApp | NO  | Eclipse    | webpiecesexample-all/webpiecesexample-dev
+			//    Test    | NO  | Eclipse    | webpiecesexample-all/webpiecesexample-dev
+			//    MainApp | YES | Eclipse    | webpiecesexample-all/webpiecesexample-dev
+			//    Test    | YES | Eclipse    | webpiecesexample-all/webpiecesexample-dev
+			log.info("You appear to be running test from Intellij or Gradle(xxxx-dev subproject).");
+			File parent = filePath.getParentFile();
+			return FileFactory.newFile(parent, "webpiecesexample/src/dist");
+		} else if("webpiecesexample".equals(name)) {
+			//    Test    | NO  | Intellij   | webpiecesexample-all/webpiecesexample
+			//    Test    | YES | Intellij   | webpiecesexample-all/webpiecesexample
+			//    Test    | NO  | Gradle     | webpiecesexample-all/webpiecesexample
+			//    Test    | YES | Gradle     | webpiecesexample-all/webpiecesexample
+			//    MainApp | NO  | Eclipse    | webpiecesexample-all/webpiecesexample
+			//    Test    | NO  | Eclipse    | webpiecesexample-all/webpiecesexample
+			//    MainApp | YES | Eclipse    | webpiecesexample-all/webpiecesexample
+			//    Test    | YES | Eclipse    | webpiecesexample-all/webpiecesexample
+			log.info("You appear to be running test from Intellij or Gradle(main subproject).");
+			return FileFactory.newFile(filePath, "src/dist");
+		} else if(locatorFile1.exists()) {
+			//DAMNIT Intellij...FIX THIS STUFF!!!
+			//For ->
+			//    MainApp | NO  | Intellij   | webpiecesexample-all/webpiecesexample
+			//    MainApp | NO  | Intellij   | webpiecesexample-all/webpiecesexample-dev
+			log.info("You appear to be running a main app from Intellij..but unclear from which subproject");
+			return FileFactory.newFile(filePath, "webpiecesexample/src/dist");
+		} else if(locatorFile2.exists()) {
+			//DAMNIT Intellij...FIX THIS STUFF!!!
+			//
+			//    MainApp | YES | Intellij    | webpiecesexample-all/webpiecesexample
+			//    MainApp | YES | Intellij    | webpiecesexample-all/webpiecesexample-dev
+			log.info("Running DevServer in Intellij, making property modifications(damn intellij..fix that)");
+			return FileFactory.newFile(filePath, "webserver/webpiecesServerBuilder/templateProject/webpiecesexample/src/dist");
 		}
-		
-		return FileFactory.newFile(filePath, "src/dist");
+
+		throw new IllegalStateException("bug, we must have missed an environment="+name+" full path="+filePath);
 	}
 
 	/**
