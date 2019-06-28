@@ -7,11 +7,13 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Map;
 
 import org.webpieces.nio.api.channels.TCPServerChannel;
 import org.webpieces.router.api.PortConfig;
 import org.webpieces.router.api.RouterConfig;
 import org.webpieces.templating.api.TemplateConfig;
+import org.webpieces.util.cmdline.CommandLineParser;
 import org.webpieces.util.file.FileFactory;
 import org.webpieces.util.file.VirtualFile;
 import org.webpieces.util.file.VirtualFileClasspath;
@@ -45,12 +47,39 @@ public class Server {
 	
 	public static final Charset ALL_FILE_ENCODINGS = StandardCharsets.UTF_8;
 	
+	public static final String HTTP_PORT_KEY = "http.port";
+	public static final String HTTPS_PORT_KEY = "https.port";
+	public static final String BACKEND_PORT_KEY = "backend.port";
+	
 	//Welcome to YOUR main method as webpieces webserver is just a library you use that you can
 	//swap literally any piece of
 	public static void main(String[] args) throws InterruptedException {
 		try {
-			Server server = new Server(null, null, new ServerConfig("production"));
+			CommandLineParser parser = new CommandLineParser();
+			Map<String, String> arguments = parser.parse(args);
+
+			ServerConfig config = new ServerConfig("production");
+
+			if(arguments.get(HTTP_PORT_KEY) != null) {
+				if(arguments.get(HTTPS_PORT_KEY) == null)
+					throw new IllegalArgumentException(HTTP_PORT_KEY+" passed in on command line but "+HTTPS_PORT_KEY+" is not.  You must pass in both or neither");
+				//in general, if we are doing custom ports, we may be told which ports and then expose those ports on 80/443
+				//via firewall
+				config.setUseFirewall(true);
+
+				int httpPort = parser.parseInt(HTTP_PORT_KEY, arguments.get(HTTP_PORT_KEY));
+				int httpsPort = parser.parseInt(HTTPS_PORT_KEY, arguments.get(HTTPS_PORT_KEY));
+				config.setHttpAddress(new InetSocketAddress(httpPort));
+				config.setHttpsAddress(new InetSocketAddress(httpsPort));
+			}
 			
+			if(arguments.get(BACKEND_PORT_KEY) != null) {
+				int backendPort = parser.parseInt(BACKEND_PORT_KEY, arguments.get(BACKEND_PORT_KEY));
+				config.setBackendAddress(new InetSocketAddress(backendPort));
+			}
+			
+			Server server = new Server(null, null, config);
+
 			server.start();
 			
 			synchronized (Server.class) {
@@ -90,8 +119,14 @@ public class Server {
 		}
 		
 		SecretKeyInfo signingKey = new SecretKeyInfo(fetchKey(), "HmacSHA1");
-		
+
+		//If your company terminates https into the firewall and then does http to this webserver, change this
+		//to null.  That will then make the https port serve http.  It will still serve all the https pages
+		//but over http over whatever port your use.  All https pages are still not served over the http port
 		WebSSLFactory webSSLFactory = new WebSSLFactory();
+
+		//if serving over different port, route all backend pages to special router 
+		boolean serveBackendOverDifferentPort = svrConfig.getBackendAddress() != null;
 
 		//Different pieces of the server have different configuration objects where settings are set
 		//You could move these to property files but definitely put some thought if you want people 
@@ -105,34 +140,45 @@ public class Server {
 											.setWebappOverrides(appOverrides)
 											.setWebAppMetaProperties(svrConfig.getWebAppMetaProperties())
 											.setSecretKey(signingKey)
-											.setPortConfigCallback(() -> fetchPortsForRedirects())
+											.setPortConfigCallback(() -> fetchPortsForRedirects(svrConfig.isUseFirewall()))
 											.setCachedCompressedDirectory(svrConfig.getCompressionCacheDir())
 											.setNeedsSimpleStorage(webSSLFactory)
-											.setTokenCheckOn(svrConfig.isTokenCheckOn()); 
-				
+											.setTokenCheckOn(svrConfig.isTokenCheckOn())
+											.setAddBackendRoutesOverPort(serveBackendOverDifferentPort); 
+
 		WebServerConfig config = new WebServerConfig()
 										.setPlatformOverrides(allOverrides)
-										.setHttpListenAddress(new InetSocketAddress(svrConfig.getHttpPort()))
-										.setHttpsListenAddress(new InetSocketAddress(svrConfig.getHttpsPort()))
+										.setHttpListenAddress(svrConfig.getHttpAddress())
+										.setHttpsListenAddress(svrConfig.getHttpsAddress())
 										.setSslEngineFactory(webSSLFactory)
 										.setFunctionToConfigureServerSocket(s -> configure(s))
 										.setValidateRouteIdsOnStartup(svrConfig.isValidateRouteIdsOnStartup())
-										.setStaticFileCacheTimeSeconds(svrConfig.getStaticFileCacheTimeSeconds());
+										.setStaticFileCacheTimeSeconds(svrConfig.getStaticFileCacheTimeSeconds())
+										.setBackendListenAddress(svrConfig.getBackendAddress())
+										.setBackendSslEngineFactory(webSSLFactory); //normally use a different cert for backend but we are self-signed!
+
 		TemplateConfig templateConfig = new TemplateConfig();
 		
 		webServer = WebServerFactory.create(config, routerConfig, templateConfig);
 	}
 	
-	PortConfig fetchPortsForRedirects() {
-		//NOTE: You will need to modify this so it detects when you are behind a firewall that has ports exposed to 
-		//customers different than the ports your server exposes
-		boolean useFirewallPorts = false;
-		
+	/**
+	 * In issuing a redirect, it is important to send back to clients the correct port so
+	 * instead of redirecting to /asdfsdf:12343 which the server is bound to, we redirect back
+	 * to asdfsdf:80.  
+	 * 
+	 * This is due to if you send no port information in the redirect, some browsers would redirect
+	 * back to port 80 which would be wrong when testing on localhost:8080.  TODO: test again in 
+	 * modern day browsers to see if we can eliminate this code completely and just send a redirect 
+	 * to the url and hope the browser knows which port it originally requested.  test in opera, firefox
+	 * IE, safari and chrome
+	 */
+	PortConfig fetchPortsForRedirects(boolean isUseFirewall) {
 		//NOTE: for running locally and for tests, you must set useFirewallPorts=false
 		
 		int httpPort = 80; //good security teams generally have the firewall on port 80 and your server on something like 8080
 		int httpsPort = 443; //good security teams generally have the firewall on port 443 and your server on something like 8443
-		if(!useFirewallPorts) {
+		if(!isUseFirewall) {
 			//otherwise use the same port the webserver is bound to
 			//this is for running locally AND for local tests
 			httpPort = getUnderlyingHttpChannel().getLocalAddress().getPort();

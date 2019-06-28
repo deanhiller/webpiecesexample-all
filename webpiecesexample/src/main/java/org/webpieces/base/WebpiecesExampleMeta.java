@@ -35,7 +35,6 @@ import java.util.Map;
 public class WebpiecesExampleMeta implements WebAppMeta {
 
 	private static final Logger log = LoggerFactory.getLogger(WebpiecesExampleMeta.class);
-	public static final String BACKEND_PATH = "/backend1";
 	private String persistenceUnit;
 
 	@Override

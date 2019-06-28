@@ -7,7 +7,7 @@ buildscript {
        }
     }
     dependencies {
-        classpath 'org.webpieces:gradle-plugin-htmlcompiler:1.9-developer'
+        classpath "org.webpieces:gradle-plugin-htmlcompiler:${webpiecesVersion}"
     }
 }
 
@@ -85,6 +85,14 @@ dependencies {
   //production jars, the html files are compiled to *.class files
   testCompile deps['web-webserver-test']
   testCompile deps['selenium']
+}
+
+//NOTE: jar section has to go AFTER dependencies section to read all dependencies
+jar {
+    manifest.attributes(
+            "Class-Path": configurations.runtime.files.collect { it.name }.join(' '),
+            "Main-Class": 'org.webpieces.Server'
+    )
 }
 
 mainClassName = "org.webpieces.Server"
