@@ -1,1 +1,1 @@
-org.webpieces.base.WebpiecesExampleMeta
+org.webpieces.base.ProdServerMeta
