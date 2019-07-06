@@ -28,6 +28,7 @@ import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
 import org.webpieces.base.tags.TagLookupOverride;
+import org.webpieces.webserver.impl.PortConfigLookupImpl;
 
 /**
  * Changes to any class in this package (or any classes that classes in this 
@@ -105,7 +106,9 @@ public class Server {
 		//You could move these to property files but definitely put some thought if you want people 
 		//randomly changing those properties and restarting the server without going through some testing
 		//by a QA team.  We leave most of these properties right here so changes get tested by QA.
-		
+
+		PortConfigLookupImpl portLookup = new PortConfigLookupImpl();
+
 		//A SECOND note is that webpieces strives to default most configuration and expose it through an
 		//amazing properties plugin that not only has a web page for making changes BUT persists those
 		//changes across the cluster so they are re-applied at startup
@@ -114,11 +117,11 @@ public class Server {
 											.setWebappOverrides(appOverrides)
 											.setWebAppMetaProperties(svrConfig.getWebAppMetaProperties())
 											.setSecretKey(new SecretKeyInfo(fetchKey(), "HmacSHA1"))
-											.setPortConfigCallback(() -> fetchPortsForRedirects(svrConfig.isUseFirewall()))
 											.setCachedCompressedDirectory(svrConfig.getCompressionCacheDir())
 											.setTokenCheckOn(svrConfig.isTokenCheckOn())
 											.setNeedsStorage(svrConfig.getNeedsStorage())
-											.setEnableSeperateBackendRouter(backendHostedOverPort); 
+											.setEnableSeperateBackendRouter(backendHostedOverPort)
+											.setPortLookupConfig(portLookup);
 
 		WebServerConfig config = new WebServerConfig()
 										.setPlatformOverrides(allOverrides)
@@ -126,32 +129,14 @@ public class Server {
 										.setHttpsConfig(svrConfig.getHttpsConfig())
 										.setBackendSvrConfig(svrConfig.getBackendSvrConfig())
 										.setValidateRouteIdsOnStartup(svrConfig.isValidateRouteIdsOnStartup())
-										.setStaticFileCacheTimeSeconds(svrConfig.getStaticFileCacheTimeSeconds());
+										.setStaticFileCacheTimeSeconds(svrConfig.getStaticFileCacheTimeSeconds())
+										.setWebServerPortInfo(portLookup);
 
 		TemplateConfig templateConfig = new TemplateConfig();
 		
 		//Notice that there is a WebServerConfig, a RouterConfig, and a TemplateConfig making up
 		//3 of the major pieces of webpieces.
 		webServer = WebServerFactory.create(config, routerConfig, templateConfig);
-	}
-	
-	/**
-	 * If we get a HTTP request and need to redirect to the https port, we need to know whether to redirect
-	 * to port 443 OR should we redirect to the port the server is running on.  Generally, we always 
-	 * redirect to port 443 when using a firewall as 443 is the standard https port.
-	 */
-	PortConfig fetchPortsForRedirects(boolean isUseFirewall) {
-		//NOTE: for running locally and for tests, you must set useFirewallPorts=false
-		
-		int httpPort = 80; //good security teams generally have the firewall on port 80 and your server on something like 8080
-		int httpsPort = 443; //good security teams generally have the firewall on port 443 and your server on something like 8443
-		if(!isUseFirewall) {
-			//otherwise use the same port the webserver is bound to
-			//this is for running locally AND for local tests
-			httpPort = getUnderlyingHttpChannel().getLocalAddress().getPort();
-			httpsPort = getUnderlyingHttpsChannel().getLocalAddress().getPort();
-		}
-		return new PortConfig(httpPort, httpsPort);
 	}
 	
 	private byte[] fetchKey() {
@@ -276,8 +261,6 @@ public class Server {
 			if(arguments.get(HTTPS_PORT_KEY) == null)
 				throw new IllegalArgumentException(HTTP_PORT_KEY+" passed in on command line but "+HTTPS_PORT_KEY+" is not.  You must pass in both or neither");
 			//in general, if we are doing custom ports, here we assume you are doing a firewall but feel free to change that
-			config.setUseFirewall(true);
-			
 			int httpPort = parser.parseInt(HTTP_PORT_KEY, arguments.get(HTTP_PORT_KEY));
 			int httpsPort = parser.parseInt(HTTPS_PORT_KEY, arguments.get(HTTPS_PORT_KEY));
 			HttpSvrInstanceConfig httpConfig = new HttpSvrInstanceConfig(new InetSocketAddress(httpPort), null);
