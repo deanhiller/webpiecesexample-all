@@ -76,6 +76,7 @@ public class Server {
 			}	
 		} catch(Throwable e) {
 			log.error("Failed to startup.  exiting jvm", e);
+			e.printStackTrace();
 			System.exit(1); // should not be needed BUT some 3rd party libraries start non-daemon threads :(
 		}
 	}
