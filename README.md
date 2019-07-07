@@ -1,5 +1,5 @@
 # webpieces-example
-  
+
 Generated from project https://github.com/deanhiller/webpieces/releases
 
 Legacy project used for testing backwards compatibility of webpieces project

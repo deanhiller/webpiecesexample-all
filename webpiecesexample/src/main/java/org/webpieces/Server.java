@@ -11,7 +11,6 @@ import java.util.Map;
 
 import org.webpieces.nio.api.channels.TCPServerChannel;
 import org.webpieces.plugins.backend.BackendPlugin;
-import org.webpieces.router.api.PortConfig;
 import org.webpieces.router.api.RouterConfig;
 import org.webpieces.templating.api.TemplateConfig;
 import org.webpieces.util.cmdline.CommandLineParser;
@@ -23,12 +22,12 @@ import org.webpieces.webserver.api.HttpSvrInstanceConfig;
 import org.webpieces.webserver.api.WebServer;
 import org.webpieces.webserver.api.WebServerConfig;
 import org.webpieces.webserver.api.WebServerFactory;
+import org.webpieces.webserver.impl.PortConfigLookupImpl;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
 import org.webpieces.base.tags.TagLookupOverride;
-import org.webpieces.webserver.impl.PortConfigLookupImpl;
 
 /**
  * Changes to any class in this package (or any classes that classes in this 
@@ -89,6 +88,8 @@ public class Server {
 
 		File baseWorkingDir = modifyUserDirForManyEnvironments(filePath);
 
+		PortConfigLookupImpl portLookup = new PortConfigLookupImpl();
+		
 		//This override is only needed if you want to add your own Html Tags to re-use
 		//you can delete this code if you are not adding your own webpieces html tags
 		//We graciously added #{mytag}# #{id}# and #{myfield}# as examples that you can
@@ -106,9 +107,7 @@ public class Server {
 		//You could move these to property files but definitely put some thought if you want people 
 		//randomly changing those properties and restarting the server without going through some testing
 		//by a QA team.  We leave most of these properties right here so changes get tested by QA.
-
-		PortConfigLookupImpl portLookup = new PortConfigLookupImpl();
-
+		
 		//A SECOND note is that webpieces strives to default most configuration and expose it through an
 		//amazing properties plugin that not only has a web page for making changes BUT persists those
 		//changes across the cluster so they are re-applied at startup
@@ -120,17 +119,17 @@ public class Server {
 											.setCachedCompressedDirectory(svrConfig.getCompressionCacheDir())
 											.setTokenCheckOn(svrConfig.isTokenCheckOn())
 											.setNeedsStorage(svrConfig.getNeedsStorage())
-											.setEnableSeperateBackendRouter(backendHostedOverPort)
-											.setPortLookupConfig(portLookup);
+											.setPortLookupConfig(portLookup)
+											.setEnableSeperateBackendRouter(backendHostedOverPort); 
 
 		WebServerConfig config = new WebServerConfig()
 										.setPlatformOverrides(allOverrides)
 										.setHttpConfig(svrConfig.getHttpConfig())
 										.setHttpsConfig(svrConfig.getHttpsConfig())
 										.setBackendSvrConfig(svrConfig.getBackendSvrConfig())
+										.setWebServerPortInfo(portLookup)
 										.setValidateRouteIdsOnStartup(svrConfig.isValidateRouteIdsOnStartup())
-										.setStaticFileCacheTimeSeconds(svrConfig.getStaticFileCacheTimeSeconds())
-										.setWebServerPortInfo(portLookup);
+										.setStaticFileCacheTimeSeconds(svrConfig.getStaticFileCacheTimeSeconds());
 
 		TemplateConfig templateConfig = new TemplateConfig();
 		
@@ -251,16 +250,22 @@ public class Server {
 	private static ServerConfig parseAndConfigure(String[] args) {
 		CommandLineParser parser = new CommandLineParser();
 		Map<String, String> arguments = parser.parse(args); //prelim quick parse into Map
+		
+//		org.webpieces.util.cmdline2.CommandLineParser parser2 = new org.webpieces.util.cmdline2.CommandLineParser();
+//		Arguments arguments2 = parser2.parse(args);
 
 		WebSSLFactory factory = new WebSSLFactory();
 
 		ServerConfig config = new ServerConfig(factory, "production");
 		config.addNeedsStorage(factory);
 
+//		Supplier<InetSocketAddress> httpAddr = arguments2.consumeOptional(HTTP_PORT_KEY, ":0", "Http host&port.  syntax: {host}:{port} or just :{port} to bind to all NIC ips on that host", (s) -> convertInet(s));
+//		Supplier<InetSocketAddress> httpsAddr = arguments2.consumeOptional(HTTPS_PORT_KEY, ":0", "Http host&port.  syntax: {host}:{port} or just :{port} to bind to all NIC ips on that host", (s) -> convertInet(s));
+//		
 		if(arguments.get(HTTP_PORT_KEY) != null) {
 			if(arguments.get(HTTPS_PORT_KEY) == null)
 				throw new IllegalArgumentException(HTTP_PORT_KEY+" passed in on command line but "+HTTPS_PORT_KEY+" is not.  You must pass in both or neither");
-			//in general, if we are doing custom ports, here we assume you are doing a firewall but feel free to change that
+
 			int httpPort = parser.parseInt(HTTP_PORT_KEY, arguments.get(HTTP_PORT_KEY));
 			int httpsPort = parser.parseInt(HTTPS_PORT_KEY, arguments.get(HTTPS_PORT_KEY));
 			HttpSvrInstanceConfig httpConfig = new HttpSvrInstanceConfig(new InetSocketAddress(httpPort), null);
@@ -280,6 +285,20 @@ public class Server {
 		}
 		return config;
 	}
+	
+//	private static InetSocketAddress convertInet(String value) {
+//		int index = value.indexOf(":");
+//		if(index < 0)
+//			throw new IllegalArgumentException("Invalid format.  Format must be '{host}:{port}' or ':port'");
+//		String host = value.substring(0, index);
+//		String portStr = value.substring(index+1);
+//		try {
+//			int port = Integer.parseInt(portStr);
+//			return new InetSocketAddress(host, port);
+//		} catch(NumberFormatException e) {
+//			throw new IllegalArgumentException("Invalid format.  The port piece of '{host}:{port}' or ':port' must be an integer");
+//		}
+//	}
 	
 	public void start() {
 		webServer.startSync();
