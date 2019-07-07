@@ -1,7 +1,6 @@
 package org.webpieces;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 
 import org.junit.Test;
 import org.webpieces.plugins.hibernate.HibernatePlugin;
