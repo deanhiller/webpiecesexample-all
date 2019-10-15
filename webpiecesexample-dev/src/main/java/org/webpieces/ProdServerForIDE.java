@@ -3,13 +3,14 @@ package org.webpieces;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.webpieces.plugins.sslcert.WebSSLFactory;
 import org.webpieces.templatingdev.api.DevTemplateModule;
 import org.webpieces.templatingdev.api.TemplateCompileConfig;
 import org.webpieces.util.file.VirtualFile;
 import org.webpieces.util.file.VirtualFileFactory;
 import org.webpieces.util.file.VirtualFileImpl;
-import org.webpieces.util.logging.Logger;
-import org.webpieces.util.logging.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Module;
 
@@ -65,7 +66,7 @@ public class ProdServerForIDE {
 		Module platformOverrides = new DevTemplateModule(templateConfig);
 		
 		WebSSLFactory sslFactory = new WebSSLFactory();
-		ServerConfig config = new ServerConfig(sslFactory);
+		ServerConfig config = new ServerConfig(sslFactory, false);
 		
 		//It is very important to turn off caching or developers will get very confused when they
 		//change stuff and they don't see changes in the website

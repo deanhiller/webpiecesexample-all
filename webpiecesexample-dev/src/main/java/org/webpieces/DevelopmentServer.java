@@ -5,14 +5,14 @@ import java.util.List;
 
 import org.webpieces.compiler.api.CompileConfig;
 import org.webpieces.devrouter.api.DevRouterModule;
+import org.webpieces.plugins.sslcert.WebSSLFactory;
 import org.webpieces.templatingdev.api.DevTemplateModule;
 import org.webpieces.templatingdev.api.TemplateCompileConfig;
 import org.webpieces.util.file.VirtualFile;
 import org.webpieces.util.file.VirtualFileImpl;
-import org.webpieces.util.logging.Logger;
-import org.webpieces.util.logging.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
@@ -40,7 +40,7 @@ public class DevelopmentServer {
 				DevelopmentServer.class.wait();
 			}
 		} catch(Throwable e) {
-			log.error("Failed to startup.  exiting jvm", e);
+			log.error("Failed to startup.  exiting jvm. msg="+e.getMessage(), e);
 			System.exit(1); // should not be needed BUT some 3rd party libraries start non-daemon threads :(
 		}
 	}
@@ -76,11 +76,11 @@ public class DevelopmentServer {
 		
 		String[] args;
 		if(usePortZero)
-			args = Lists.newArrayList("-http.port=:0", "-https.port=:0", "-hibernate.persistenceunit=hibernatefortest").toArray(new String[0]);
+			args = new String[] {"-http.port=:0", "-https.port=:0", "-hibernate.persistenceunit=hibernatefortest"};
 		else
-			args = Lists.newArrayList("-hibernate.persistenceunit=hibernatefortest").toArray(new String[0]);
+			args = new String[] {"-hibernate.persistenceunit=hibernatefortest"};
 		
-		ServerConfig config = new ServerConfig(sslFactory);
+		ServerConfig config = new ServerConfig(sslFactory, false);
 
 		//READ the documentation in HttpSvrInstanceConfig for more about these settings
 //		HttpSvrInstanceConfig backendSvrConfig = new HttpSvrInstanceConfig(new InetSocketAddress(8444), sslFactory);

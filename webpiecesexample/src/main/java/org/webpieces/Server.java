@@ -6,24 +6,22 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
-import java.util.List;
 
 import org.webpieces.nio.api.channels.TCPServerChannel;
+import org.webpieces.plugins.sslcert.WebSSLFactory;
 import org.webpieces.router.api.RouterConfig;
 import org.webpieces.templating.api.TemplateConfig;
 import org.webpieces.util.cmdline2.Arguments;
 import org.webpieces.util.cmdline2.CommandLineParser;
 import org.webpieces.util.file.FileFactory;
-import org.webpieces.util.logging.Logger;
-import org.webpieces.util.logging.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.webpieces.util.security.SecretKeyInfo;
 import org.webpieces.webserver.api.HttpSvrInstanceConfig;
 import org.webpieces.webserver.api.WebServer;
 import org.webpieces.webserver.api.WebServerConfig;
 import org.webpieces.webserver.api.WebServerFactory;
-import org.webpieces.webserver.impl.PortConfigLookupImpl;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Module;
@@ -32,7 +30,7 @@ import com.google.inject.util.Modules;
 import org.webpieces.base.tags.TagLookupOverride;
 
 /**
- * Changes to any class in this package (or any classes that classes in this 
+ * Changes to any class in this 'package' (or any classes that classes in this 
  * package reference) WILL require a restart when you are running the DevelopmentServer.  
  * This class should try to remain pretty thin and you should avoid linking any 
  * classes in this package to classes outside this package(This is only true if 
@@ -60,31 +58,27 @@ public class Server {
 			log.info("Starting Production Server under java version="+version);
 
 			//A cheat for more permanent arguments that don't change per environment(production, staging, devel)
+			//or modify this to use unique prod/staging/devel databases for each environment and pass in
+			//on the command line
 			String[] newArgs = addArgs(args, "-hibernate.persistenceunit=production");
 
-			ServerConfig svrConfig = parseAndConfigure();
+			ServerConfig svrConfig = createServerConfig();
 			Server server = new Server(null, null, svrConfig, newArgs);
 			server.start();
 
 			synchronized (Server.class) {
 				//wait forever so server doesn't shut down..
 				Server.class.wait();
-			}
+			}		
 		} catch(Throwable e) {
 			log.error("Failed to startup.  exiting jvm", e);
 			System.exit(1); // should not be needed BUT some 3rd party libraries start non-daemon threads :(
 		}
 	}
 
-	private static String[] addArgs(String[] originalArgs, String ... additionalArgs) {
-		ArrayList<String> listArgs = Lists.newArrayList(originalArgs);
-		for(String arg : additionalArgs) {
-			listArgs.add(arg);
-		}
-		return listArgs.toArray(new String[0]);
-	}
+	private final WebServer webServer;
 
-	private WebServer webServer;
+	private final boolean isRunningServerMainMethod;
 
 	public Server(
 		Module platformOverrides, 
@@ -92,6 +86,10 @@ public class Server {
 		ServerConfig svrConfig, 
 		String ... args
 	) {
+		//ALWAYS install a catch all on all threads
+		Thread.setDefaultUncaughtExceptionHandler(new WebpiecesExceptionHandler());
+		
+		isRunningServerMainMethod = svrConfig.isRunningServerMainMethod();
 		//read here and checked for correctness on last line of server construction
 		Arguments arguments = new CommandLineParser().parse(args);
 
@@ -100,8 +98,6 @@ public class Server {
 
 		File baseWorkingDir = modifyUserDirForManyEnvironments(filePath);
 
-		PortConfigLookupImpl portLookup = new PortConfigLookupImpl();
-		
 		//This override is only needed if you want to add your own Html Tags to re-use
 		//you can delete this code if you are not adding your own webpieces html tags
 		//We graciously added #{mytag}# #{id}# and #{myfield}# as examples that you can
@@ -126,15 +122,13 @@ public class Server {
 											.setSecretKey(new SecretKeyInfo(fetchKey(), "HmacSHA1"))
 											.setCachedCompressedDirectory(svrConfig.getCompressionCacheDir())
 											.setTokenCheckOn(svrConfig.isTokenCheckOn())
-											.setNeedsStorage(svrConfig.getNeedsStorage())
-											.setPortLookupConfig(portLookup);
+											.setNeedsStorage(svrConfig.getNeedsStorage());
 
 		WebServerConfig config = new WebServerConfig()
 										.setPlatformOverrides(allOverrides)
 										.setHttpConfig(svrConfig.getHttpConfig())
 										.setHttpsConfig(svrConfig.getHttpsConfig())
 										.setBackendSvrConfig(svrConfig.getBackendSvrConfig())
-										.setWebServerPortInfo(portLookup)
 										.setValidateRouteIdsOnStartup(svrConfig.isValidateRouteIdsOnStartup())
 										.setStaticFileCacheTimeSeconds(svrConfig.getStaticFileCacheTimeSeconds());
 
@@ -212,7 +206,7 @@ public class Server {
 			//    Test    | NO  | Eclipse    | webpiecesexample-all/webpiecesexample-dev
 			//    MainApp | YES | Eclipse    | webpiecesexample-all/webpiecesexample-dev
 			//    Test    | YES | Eclipse    | webpiecesexample-all/webpiecesexample-dev
-			log.info("You appear to be running test from Intellij, Eclipse or Gradle(xxxx-dev subproject), or the main app from eclipse");
+			log.info("You appear to be running test from Intellij, Eclipse or Gradle(xxxx-dev subproject), or the DevelopmentServer.java/ProdServerForIDE.java from eclipse");
 			File parent = filePath.getParentFile();
 			return FileFactory.newFile(parent, "webpiecesexample/src/dist");
 		} else if("webpiecesexample".equals(name)) {
@@ -224,15 +218,25 @@ public class Server {
 			//    Test    | NO  | Eclipse    | webpiecesexample-all/webpiecesexample
 			//    MainApp | YES | Eclipse    | webpiecesexample-all/webpiecesexample
 			//    Test    | YES | Eclipse    | webpiecesexample-all/webpiecesexample
-			log.info("You appear to be running test from Intellij, Eclipse or Gradle(main subproject), or the main app from eclipse");
-			return FileFactory.newFile(filePath, "src/dist");
+			if(isRunningServerMainMethod) {
+				log.info("You appear to be running Server.java from Eclipse");
+				throw new NoRunningServerMainInIDEException(); 
+			} else {	
+				log.info("You appear to be running test from Intellij, Eclipse or Gradle(main subproject)");
+				return FileFactory.newFile(filePath, "src/dist");
+			}
 		} else if(locatorFile1.exists()) {
 			//DAMNIT Intellij...FIX THIS STUFF!!!
 			//For ->
 			//    MainApp | NO  | Intellij   | webpiecesexample-all/webpiecesexample
 			//    MainApp | NO  | Intellij   | webpiecesexample-all/webpiecesexample-dev
-			log.info("You appear to be running a main app from Intellij..but unclear from which subproject");
-			return FileFactory.newFile(filePath, "webpiecesexample/src/dist");
+			if(isRunningServerMainMethod) {
+				log.info("You appear to be running Server.java from Intellij");
+				throw new NoRunningServerMainInIDEException(); 
+			} else {
+				log.info("You appear to be running DevelopmentServer.java/ProdServerForIDE.java from Intellij");
+				return FileFactory.newFile(filePath, "webpiecesexample/src/dist");
+			}
 		} else if(locatorFile2.exists()) {
 			//DAMNIT Intellij...FIX THIS STUFF!!!
 			//
@@ -240,11 +244,28 @@ public class Server {
 			//
 			//    MainApp | YES | Intellij    | webpiecesexample-all/webpiecesexample
 			//    MainApp | YES | Intellij    | webpiecesexample-all/webpiecesexample-dev
-			log.info("Running DevServer in Intellij, making property modifications(damn intellij..fix that)");
-			return FileFactory.newFile(filePath, "webserver/webpiecesServerBuilder/templateProject/webpiecesexample/src/dist");
+			if(isRunningServerMainMethod) {
+				log.info("You appear to be running org.webpieces.Server.java from webpieces in Intellij");
+				throw new NoRunningServerMainInIDEException(); 
+			} else {
+				log.info("You appear to be running DevelopmentServer.java/ProdServerForIDE.java in webpieces project from Intellij");
+				return FileFactory.newFile(filePath, "webserver/webpiecesServerBuilder/templateProject/webpiecesexample/src/dist");
+			}
 		}
 
 		throw new IllegalStateException("bug, we must have missed an environment="+name+" full path="+filePath);
+	}
+
+	private class NoRunningServerMainInIDEException extends RuntimeException {
+		private static final long serialVersionUID = 1L;
+
+		public NoRunningServerMainInIDEException() {
+			super("Please do one of the following:\n"
+					+ "1. run DevelopmentServer.java or ProdServerForIDE.java instead of Server.java from IDE OR\n"
+					+ "2. run ./gradle assembleDist and run the full blown prod server which is temporarily setup with H2 in-memory and will work\n"
+					+ "NOTE: Running Server.java NEVER will work in the IDE as it needs pre-compiled *.html -> *.class files which only happen in gradle.\n"
+					+ "The ProdServerForIDE compiles html files for you as does the DevelopmentServer(DevelopmentServer also hot compiles *.java files as you change them");
+		}
 	}
 
 	/**
@@ -258,17 +279,25 @@ public class Server {
 		//channel.socket().setReceiveBufferSize(size);
 	}
 
-	private static ServerConfig parseAndConfigure() {
+	private static ServerConfig createServerConfig() {
 
 		WebSSLFactory factory = new WebSSLFactory();
 
-		ServerConfig config = new ServerConfig(factory);
+		ServerConfig config = new ServerConfig(factory, true);
 		config.addNeedsStorage(factory);
 		config.setHttpConfig(new HttpSvrInstanceConfig(null, (s) -> configure(s)));
 		config.setHttpsConfig(new HttpSvrInstanceConfig(factory, (s) -> configure(s)));		
 		config.setBackendSvrConfig(new HttpSvrInstanceConfig(factory, (s) -> configure(s)));
 		
 		return config;
+	}
+	
+	private static String[] addArgs(String[] originalArgs, String ... additionalArgs) {
+		ArrayList<String> listArgs = Lists.newArrayList(originalArgs);
+		for(String arg : additionalArgs) {
+			listArgs.add(arg);
+		}
+		return listArgs.toArray(new String[0]);
 	}
 	
 	public void start() {
