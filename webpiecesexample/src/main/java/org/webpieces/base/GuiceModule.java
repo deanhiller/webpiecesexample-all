@@ -11,14 +11,14 @@ import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.multibindings.Multibinder;
 
-import org.webpieces.base.crud.login.BackendLoginImpl;
-import org.webpieces.base.libs.EducationEnum;
-import org.webpieces.base.libs.RemoteService;
-import org.webpieces.base.libs.RemoteServiceImpl;
-import org.webpieces.base.libs.RoleEnum;
-import org.webpieces.base.libs.SimpleStorageImpl;
-import org.webpieces.base.libs.SomeLibrary;
-import org.webpieces.base.libs.SomeLibraryImpl;
+import org.webpieces.web.login.BackendLoginImpl;
+import org.webpieces.db.EducationEnum;
+import org.webpieces.service.RemoteService;
+import org.webpieces.service.RemoteServiceImpl;
+import org.webpieces.db.RoleEnum;
+import org.webpieces.service.SimpleStorageImpl;
+import org.webpieces.service.SomeLibrary;
+import org.webpieces.service.SomeLibraryImpl;
 
 public class GuiceModule implements Module {
 

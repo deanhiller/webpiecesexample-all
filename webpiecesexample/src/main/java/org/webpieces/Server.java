@@ -14,7 +14,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
-import org.webpieces.base.tags.TagLookupOverride;
+import org.webpieces.web.tags.TagLookupOverride;
 
 /**
  * Changes to any class in this 'package' (or any classes that classes in this 
@@ -71,7 +71,7 @@ public class Server {
 		ServerConfig svrConfig, 
 		String ... args
 	) {
-		String base64Key = "96OakpilHaLIDUM171h2aE+YBBvx5cRkEPXsfEgw9Br+e1V1CrfvZLhYptlXqplmhZgG/8cVEJ4G8WdWscmSfA==";  //This gets replaced with a unique key each generated project which you need to keep or replace with your own!!!
+		String base64Key = "UddIuGt4/OUNRJKS09JQ5PlyYDxZSTeeFsJWfatyD3l63ZtW+yxi4fY0ZLMe++SlHcoJSJzg/2PzLT9P7rDymw==";  //This gets replaced with a unique key each generated project which you need to keep or replace with your own!!!
 
 		//This override is only needed if you want to add your own Html Tags to re-use
 		//you can delete this code if you are not adding your own webpieces html tags

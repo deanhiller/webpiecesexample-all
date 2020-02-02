@@ -37,9 +37,9 @@ import org.webpieces.webserver.test.ResponseWrapper;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 
-import org.webpieces.base.json.SearchRequest;
-import org.webpieces.base.json.SearchResponse;
-import org.webpieces.base.libs.RemoteService;
+import org.webpieces.json.SearchRequest;
+import org.webpieces.json.SearchResponse;
+import org.webpieces.service.RemoteService;
 import org.webpieces.mock.MockRemoteSystem;
 
 /**
