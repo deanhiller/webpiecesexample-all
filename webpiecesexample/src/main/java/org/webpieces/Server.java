@@ -14,7 +14,11 @@ import com.google.common.collect.Lists;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
-import org.webpieces.web.tags.TagLookupOverride;
+import org.webpieces.base.PlatformOverrides;
+import org.webpieces.base.RandomInstanceId;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 /**
  * Changes to any class in this 'package' (or any classes that classes in this 
@@ -44,13 +48,20 @@ public class Server {
 			String version = System.getProperty("java.version");
 			log.info("Starting Production Server under java version="+version);
 
-			//A cheat for more permanent arguments that don't change per environment(production, staging, devel)
-			//or modify this to use unique prod/staging/devel databases for each environment and pass in
-			//on the command line
+			//We typically move this to the command line so staging can have
+			//-hibernate.persistenceunit=stagingdb instead but to help people startup, we add the arg
 			String[] newArgs = addArgs(args, "-hibernate.persistenceunit=production");
+			
+			//You could pass in an instance id but in google cloud run, you have to generate it
+			String instanceId = RandomInstanceId.generate();
+			
+			CompositeMeterRegistry metrics = new CompositeMeterRegistry();
+			metrics.add(new SimpleMeterRegistry());
+			//Add Amazon or google or other here.  This one is google's...
+			//metrics.add(StackdriverMeterRegistry.builder(stackdriverConfig).build());
 
 			ServerConfig svrConfig = createServerConfig();
-			Server server = new Server(null, null, svrConfig, newArgs);
+			Server server = new Server(metrics, null, null, svrConfig, newArgs);
 			server.start();
 
 			synchronized (Server.class) {
@@ -66,6 +77,7 @@ public class Server {
 	private final WebpiecesServer webServer;
 
 	public Server(
+		MeterRegistry metrics,
 		Module platformOverrides, 
 		Module appOverrides, 
 		ServerConfig svrConfig, 
@@ -73,12 +85,8 @@ public class Server {
 	) {
 		String base64Key = "UddIuGt4/OUNRJKS09JQ5PlyYDxZSTeeFsJWfatyD3l63ZtW+yxi4fY0ZLMe++SlHcoJSJzg/2PzLT9P7rDymw==";  //This gets replaced with a unique key each generated project which you need to keep or replace with your own!!!
 
-		//This override is only needed if you want to add your own Html Tags to re-use
-		//you can delete this code if you are not adding your own webpieces html tags
-		//We graciously added #{mytag}# #{id}# and #{myfield}# as examples that you can
-		//tweak so we add that binding here.  This is one example of swapping in pieces
-		//of webpieces (pardon the pun)
-		Module allOverrides = new TagLookupOverride();
+
+		Module allOverrides = new PlatformOverrides(metrics);
 		if(platformOverrides != null) {
 			allOverrides = Modules.combine(platformOverrides, allOverrides);
 		}

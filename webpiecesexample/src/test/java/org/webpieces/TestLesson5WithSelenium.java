@@ -20,14 +20,14 @@ import org.openqa.selenium.interactions.Actions;
 import org.webpieces.ddl.api.JdbcApi;
 import org.webpieces.ddl.api.JdbcConstants;
 import org.webpieces.ddl.api.JdbcFactory;
-import org.webpieces.util.cmdline2.Arguments;
-import org.webpieces.util.cmdline2.CommandLineParser;
 import org.webpieces.webserver.api.ServerConfig;
 import org.webpieces.webserver.test.Asserts;
 import org.webpieces.webserver.test.OverridesForTestRealServer;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
+
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 /**
  * If you install firefox 47.0.1, these tests will just work out of the box
@@ -47,6 +47,7 @@ public class TestLesson5WithSelenium {
 	
 	private int httpPort;
 	private int httpsPort;
+	private SimpleMeterRegistry metrics;
 	
 	@Before
 	public void setUp() throws InterruptedException, ClassNotFoundException {
@@ -56,9 +57,10 @@ public class TestLesson5WithSelenium {
 		
 		jdbc.dropAllTablesFromDatabase();
 		
+		metrics = new SimpleMeterRegistry();
 		//you may want to create this server ONCE in a static method BUT if you do, also remember to clear out all your
 		//mocks after every test and NOT drop tables but clear and re-populate
-		Server webserver = new Server(
+		Server webserver = new Server(metrics, 
 				new OverridesForTestRealServer(), new AppOverridesModule(), 
 				new ServerConfig(JavaCache.getCacheLocation()), args);
 		
