@@ -6,6 +6,8 @@ import java.util.concurrent.TimeoutException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.webpieces.ddl.api.JdbcApi;
 import org.webpieces.ddl.api.JdbcConstants;
 import org.webpieces.ddl.api.JdbcFactory;
@@ -18,8 +20,6 @@ import org.webpieces.httpparser.api.dto.HttpRequestLine;
 import org.webpieces.httpparser.api.dto.HttpUri;
 import org.webpieces.httpparser.api.dto.KnownHttpMethod;
 import org.webpieces.httpparser.api.dto.KnownStatusCode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.webpieces.webserver.api.ServerConfig;
 import org.webpieces.webserver.test.AbstractWebpiecesTest;
 import org.webpieces.webserver.test.Asserts;
@@ -57,7 +57,7 @@ public class TestLesson7AdvancedCookiesCrud extends AbstractWebpiecesTest {
 		//you may want to create this server ONCE in a static method BUT if you do, also remember to clear out all your
 		//mocks after every test AND you can no longer run single threaded(tradeoffs, tradeoffs)
 		//This is however pretty fast to do in many systems...
-		Server webserver = new Server(metrics, getOverrides(false), null, new ServerConfig(JavaCache.getCacheLocation()), args);
+		Server webserver = new Server(getOverrides(false, metrics), null, new ServerConfig(JavaCache.getCacheLocation()), args);
 		webserver.start();
 		HttpSocket https11Socket = connectHttps(false, null, webserver.getUnderlyingHttpChannel().getLocalAddress());
 		webBrowser = new WebBrowserSimulator(https11Socket);

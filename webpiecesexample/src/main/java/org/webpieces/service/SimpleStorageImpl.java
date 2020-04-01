@@ -9,8 +9,9 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
-import org.webpieces.db.SimpleStorageDbo;
 import org.webpieces.router.api.extensions.SimpleStorage;
+
+import org.webpieces.db.SimpleStorageDbo;
 
 public class SimpleStorageImpl implements SimpleStorage {
 	

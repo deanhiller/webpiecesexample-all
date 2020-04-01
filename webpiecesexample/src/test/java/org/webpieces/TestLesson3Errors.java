@@ -23,11 +23,11 @@ import org.webpieces.webserver.test.ResponseWrapper;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 
+import org.webpieces.mock.MockRemoteSystem;
+import org.webpieces.mock.MockSomeLibrary;
 import org.webpieces.service.RemoteService;
 import org.webpieces.service.SomeLibrary;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.webpieces.mock.MockRemoteSystem;
-import org.webpieces.mock.MockSomeLibrary;
 
 /**
  * Error/Failure testing is something that tends to get missed but it can be pretty important to make sure you render a nice message
@@ -64,7 +64,7 @@ public class TestLesson3Errors extends AbstractWebpiecesTest {
 		//you may want to create this server ONCE in a static method BUT if you do, also remember to clear out all your
 		//mocks after every test AND you can no longer run single threaded(tradeoffs, tradeoffs)
 		//This is however pretty fast to do in many systems...
-		Server webserver = new Server(metrics, getOverrides(isRemote), new AppOverridesModule(), new ServerConfig(JavaCache.getCacheLocation()), args);
+		Server webserver = new Server(getOverrides(isRemote, metrics), new AppOverridesModule(), new ServerConfig(JavaCache.getCacheLocation()), args);
 		webserver.start();
 		http11Socket = connectHttp(isRemote, webserver.getUnderlyingHttpChannel().getLocalAddress());
 	}

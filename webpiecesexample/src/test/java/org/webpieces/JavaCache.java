@@ -7,7 +7,7 @@ import org.webpieces.util.file.FileFactory;
 public class JavaCache {
 
 	public static File getCacheLocation() {
-		return FileFactory.newTmpFile("webpieces/webpiecesexampleCache/precompressedFiles");
+		return FileFactory.newCacheLocation("webpiecesexampleCache/precompressedFiles");
 	}
 	
 }

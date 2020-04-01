@@ -70,7 +70,7 @@ public class DevelopmentServer {
 														.setFileEncoding(Server.ALL_FILE_ENCODINGS);
 		
 		//java source files encoding...
-		CompileConfig devConfig = new CompileConfig(srcPaths, CompileConfig.getTmpDir())
+		CompileConfig devConfig = new CompileConfig(srcPaths, CompileConfig.getHomeCacheDir("webpiecesexampleCache/devserver-bytecode"))
 										.setFileEncoding(Server.ALL_FILE_ENCODINGS);
 		Module platformOverrides = Modules.combine(
 										new DevRouterModule(devConfig),
@@ -95,7 +95,8 @@ public class DevelopmentServer {
 		config.setMetaFile(metaFile);
 		
 		SimpleMeterRegistry metrics = new SimpleMeterRegistry();
-		server = new Server(metrics, platformOverrides, null, config, args);
+		Module all = Modules.combine(platformOverrides, new SimpleMeterModule(metrics));
+		server = new Server(all, null, config, args);
 	}
 	
 	public void start() throws InterruptedException {
