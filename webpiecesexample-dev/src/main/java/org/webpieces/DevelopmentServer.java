@@ -64,7 +64,9 @@ public class DevelopmentServer {
 		
 		VirtualFile metaFile = directory.child("webpiecesexample/src/main/resources/appmetadev.txt");
 		log.info("LOADING from meta file="+metaFile.getCanonicalPath());
-		
+
+		SimpleMeterRegistry metrics = new SimpleMeterRegistry();
+
 		//html and json template file encoding...
 		TemplateCompileConfig templateConfig = new TemplateCompileConfig(srcPaths)
 														.setFileEncoding(Server.ALL_FILE_ENCODINGS);
@@ -73,14 +75,16 @@ public class DevelopmentServer {
 		CompileConfig devConfig = new CompileConfig(srcPaths, CompileConfig.getHomeCacheDir("webpiecesexampleCache/devserver-bytecode"))
 										.setFileEncoding(Server.ALL_FILE_ENCODINGS);
 		Module platformOverrides = Modules.combine(
+										new SimpleMeterModule(metrics),
 										new DevRouterModule(devConfig),
 										new DevTemplateModule(templateConfig));
 		
 		String[] args;
 		if(usePortZero)
-			args = new String[] {"-http.port=:0", "-https.port=:0", "-hibernate.persistenceunit=hibernatefortest"};
+			args = new String[] {"-http.port=:0", "-https.port=:0", 
+					"-hibernate.persistenceunit=org.webpieces.db.DbSettingsInMemory", "-hibernate.loadclassmeta=true"};
 		else
-			args = new String[] {"-hibernate.persistenceunit=hibernatefortest"};
+			args = new String[] {"-hibernate.persistenceunit=org.webpieces.db.DbSettingsInMemory", "-hibernate.loadclassmeta=true"};
 		
 		ServerConfig config = new ServerConfig(false);
 
@@ -94,9 +98,7 @@ public class DevelopmentServer {
 		config.setStaticFileCacheTimeSeconds(null);
 		config.setMetaFile(metaFile);
 		
-		SimpleMeterRegistry metrics = new SimpleMeterRegistry();
-		Module all = Modules.combine(platformOverrides, new SimpleMeterModule(metrics));
-		server = new Server(all, null, config, args);
+		server = new Server(platformOverrides, null, config, args);
 	}
 	
 	public void start() throws InterruptedException {

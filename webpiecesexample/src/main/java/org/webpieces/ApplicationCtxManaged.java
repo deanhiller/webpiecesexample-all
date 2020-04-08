@@ -2,8 +2,8 @@ package org.webpieces;
 
 public interface ApplicationCtxManaged {
 
-	public String getGoogleAnalyticsSnippet();
+	public String getGoogleAnalyticsCode();
 
-	public void setGoogleAnalyticsSnippet(String s);
+	public void setGoogleAnalyticsCode(String s);
 	
 }

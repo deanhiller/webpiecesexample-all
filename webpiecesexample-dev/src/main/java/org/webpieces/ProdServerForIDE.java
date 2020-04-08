@@ -59,7 +59,9 @@ public class ProdServerForIDE {
 		List<VirtualFile> srcPaths = new ArrayList<>();
 		srcPaths.add(directory.child(name+"/src/main/java"));
 		srcPaths.add(directory.child(name+"-dev/src/main/java"));
-		
+
+		SimpleMeterRegistry metrics = new SimpleMeterRegistry();
+
 //		VirtualFile metaFile = new VirtualFileImpl(directory + "/webpiecesexample/src/main/resources/appmetadev.txt");
 //		log.info("LOADING from meta file="+metaFile.getCanonicalPath());
 		
@@ -67,7 +69,9 @@ public class ProdServerForIDE {
 		TemplateCompileConfig templateConfig = new TemplateCompileConfig(srcPaths)
 														.setFileEncoding(Server.ALL_FILE_ENCODINGS);
 		
-		Module platformOverrides = new DevTemplateModule(templateConfig);
+		Module platformOverrides = Modules.combine(
+				new SimpleMeterModule(metrics),
+				new DevTemplateModule(templateConfig));
 		
 		ServerConfig config = new ServerConfig(false);
 		
@@ -76,9 +80,7 @@ public class ProdServerForIDE {
 		config.setStaticFileCacheTimeSeconds(null);
 		//config.setMetaFile(metaFile);
 		
-		SimpleMeterRegistry metrics = new SimpleMeterRegistry();
-		Module all = Modules.combine(platformOverrides, new SimpleMeterModule(metrics));
-		server = new Server(all, null, config, "-hibernate.persistenceunit=hibernatefortest");
+		server = new Server(platformOverrides, null, config, "-hibernate.persistenceunit=org.webpieces.db.DbSettingsInMemory", "-hibernate.loadclassmeta=true");
 	}
 	
 
