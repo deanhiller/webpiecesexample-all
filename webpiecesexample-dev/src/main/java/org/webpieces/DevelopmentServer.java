@@ -18,6 +18,7 @@ import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.webpieces.meta.JavaCache;
 
 public class DevelopmentServer {
 
@@ -93,7 +94,7 @@ public class DevelopmentServer {
 					"-hibernate.persistenceunit=org.webpieces.db.DbSettingsInMemory",
 					"-hibernate.loadclassmeta=true"};
 		
-		ServerConfig config = new ServerConfig(false);
+		ServerConfig config = new ServerConfig(JavaCache.getCacheLocation(), false);
 
 		//READ the documentation in HttpSvrInstanceConfig for more about these settings
 //		HttpSvrInstanceConfig backendSvrConfig = new HttpSvrInstanceConfig(new InetSocketAddress(8444), sslFactory);

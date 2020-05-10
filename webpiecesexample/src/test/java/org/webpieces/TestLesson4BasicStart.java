@@ -1,4 +1,5 @@
 package org.webpieces;
+
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -9,6 +10,8 @@ import org.webpieces.ddl.api.JdbcConstants;
 import org.webpieces.ddl.api.JdbcFactory;
 import org.webpieces.webserver.api.ServerConfig;
 import org.webpieces.webserver.test.Asserts;
+
+import org.webpieces.mock.JavaCache;
 
 public class TestLesson4BasicStart {
 

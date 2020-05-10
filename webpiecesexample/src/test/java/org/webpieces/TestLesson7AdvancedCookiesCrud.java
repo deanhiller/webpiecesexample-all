@@ -28,6 +28,7 @@ import org.webpieces.webserver.test.WebBrowserSimulator;
 import org.webpieces.webserver.test.http11.Requests;
 
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.webpieces.mock.JavaCache;
 
 /**
  * These are working examples of tests that sometimes are better done with the BasicSeleniumTest example but are here for completeness

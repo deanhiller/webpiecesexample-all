@@ -37,13 +37,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 
-import org.webpieces.json.SearchRequest;
-import org.webpieces.json.SearchResponse;
-import org.webpieces.mock.MockRemoteSystem;
-import org.webpieces.service.RemoteService;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.search.RequiredSearch;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.webpieces.json.SearchRequest;
+import org.webpieces.json.SearchResponse;
+import org.webpieces.mock.JavaCache;
+import org.webpieces.mock.MockRemoteSystem;
+import org.webpieces.service.RemoteService;
 
 /**
  * These are working examples of tests that sometimes are better done with the BasicSeleniumTest example but are here for completeness

@@ -23,11 +23,12 @@ import org.webpieces.webserver.test.ResponseWrapper;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.webpieces.mock.JavaCache;
 import org.webpieces.mock.MockRemoteSystem;
 import org.webpieces.mock.MockSomeLibrary;
 import org.webpieces.service.RemoteService;
 import org.webpieces.service.SomeLibrary;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 /**
  * Error/Failure testing is something that tends to get missed but it can be pretty important to make sure you render a nice message

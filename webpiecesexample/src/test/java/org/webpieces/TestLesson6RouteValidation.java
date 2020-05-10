@@ -6,6 +6,8 @@ import org.junit.Test;
 import org.webpieces.webserver.api.ServerConfig;
 import org.webpieces.webserver.test.Asserts;
 
+import org.webpieces.mock.JavaCache;
+
 public class TestLesson6RouteValidation {
 
 	private String[] args = { "-http.port=:0", "-https.port=:0", "-hibernate.persistenceunit=org.webpieces.db.DbSettingsInMemory", "-hibernate.loadclassmeta=true"};

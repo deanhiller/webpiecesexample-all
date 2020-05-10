@@ -31,9 +31,10 @@ import org.webpieces.webserver.test.ResponseWrapper;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.webpieces.mock.JavaCache;
 import org.webpieces.mock.MockRemoteSystem;
 import org.webpieces.service.RemoteService;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 /**
  * These are working examples of tests that sometimes are better done with the BasicSeleniumTest example but are here for completeness
