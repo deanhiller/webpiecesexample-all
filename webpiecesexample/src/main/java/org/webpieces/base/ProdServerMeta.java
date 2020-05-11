@@ -25,7 +25,7 @@ import org.webpieces.json.JsonRoutes;
 import org.webpieces.web.crud.CrudRoutes;
 import org.webpieces.web.crudajax.AjaxCrudRoutes;
 import org.webpieces.web.login.LoginRoutes;
-import org.webpieces.web.main.AppRoutes;
+import org.webpieces.web.main.MainRoutes;
 
 //This is where the list of Guice Modules go as well as the list of RouterModules which is the
 //core of anything you want to plugin to your web app.  To make re-usable components, you create
@@ -60,7 +60,7 @@ public class ProdServerMeta implements WebAppMeta {
 	@Override
     public List<Routes> getRouteModules() {
 		return Lists.newArrayList(
-				new AppRoutes(),
+				new MainRoutes(),
 				new LoginRoutes("/org/webpieces/web/login/AppLoginController", "/secure/.*", "password"),
 				new CrudRoutes(),
 				new AjaxCrudRoutes(),
