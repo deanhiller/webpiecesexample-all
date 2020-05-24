@@ -42,13 +42,10 @@ public class Server {
 
 			//We typically move this to the command line so staging can have
 			//-hibernate.persistenceunit=stagingdb instead but to help people startup, we add the arg
-			String[] newArgs = addArgs(new String[] {"-hibernate.persistenceunit=org.webpieces.db.DbSettingsProd", "-hibernate.loadclassmeta=true"});
+			String[] newArgs = addArgs(new String[] {"-hibernate.persistenceunit=org.webpieces.db.DbSettingsProd"});
 
-			//You could pass in an instance id but in google cloud run, you have to generate it
-			String instanceId = RandomInstanceId.generate();
-
-			ServerConfig svrConfig = createServerConfig();
-			Server server = new Server(new MetricsModule(instanceId), null, svrConfig, newArgs);
+			ServerConfig config = new ServerConfig(true);
+			Server server = new Server(null, null, config, newArgs);
 			server.start();
 
 			synchronized (Server.class) {
@@ -64,11 +61,13 @@ public class Server {
 	private final WebpiecesServer webServer;
 
 	/**
-	 * @param platformOverrides For fixing bugs in any classes by swapping them so you don't have to fork git and fix(Please do submit fixes though)
+	 * @param platformOverrides For a few things, for DevelopmentServer to swap in pieces with compilers that can compile on deman OR 
+	 *                           For fixing bugs in any classes by swapping them so you don't have to fork git and fix(Please do submit fixes though)
+	 *                           For tests to compile the html on demand at least so tests run in the IDE without needing a gradle build to compile html files
 	 * @param appOverrides For Unit testing your app so you can swap out remote clients with mocks
 	 */
 	public Server(
-		Module platformOverrides, 
+		Module platformOverrides,
 		Module appOverrides, 
 		ServerConfig svrConfig, 
 		String ... args
@@ -76,7 +75,15 @@ public class Server {
 		String base64Key = "UddIuGt4/OUNRJKS09JQ5PlyYDxZSTeeFsJWfatyD3l63ZtW+yxi4fY0ZLMe++SlHcoJSJzg/2PzLT9P7rDymw==";  //This gets replaced with a unique key each generated project which you need to keep or replace with your own!!!
 		
 		log.info("Constructing WebpiecesServer with args="+Arrays.asList(args));
-		webServer = new WebpiecesServer("webpiecesexample", base64Key, platformOverrides, appOverrides, svrConfig, args);
+
+		//This is a special platform module, the only CORE module we pass in that can be overriden in platformOverrides as well.
+		//If you have 100 microservers, a few of them may override this in platformOverrides for special cases or testing
+		//You could pass in an instance id, but this works for now too...
+		String instanceId = RandomInstanceId.generate();
+		MetricsModule metricsModule = new MetricsModule(instanceId);
+		
+		//TODO: app name should not affect modification of directory so tests don't need to pass in app name..
+		webServer = new WebpiecesServer("webpiecesexample", base64Key, metricsModule, platformOverrides, appOverrides, svrConfig, args);
 	}
 
 	public void start() {
@@ -92,11 +99,6 @@ public class Server {
 	}
 	public TCPServerChannel getUnderlyingHttpsChannel() {
 		return webServer.getUnderlyingHttpsChannel();
-	}
-	
-	private static ServerConfig createServerConfig() {
-		ServerConfig config = new ServerConfig(true);
-		return config;
 	}
 	
 	private static String[] addArgs(String[] originalArgs, String ... additionalArgs) {
