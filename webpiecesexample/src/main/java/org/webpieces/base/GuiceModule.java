@@ -3,6 +3,7 @@ package org.webpieces.base;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.webpieces.ctx.api.ApplicationContext;
+import org.webpieces.ctx.api.extension.HtmlTagCreator;
 import org.webpieces.plugins.backend.login.BackendLogin;
 import org.webpieces.router.api.extensions.ObjectStringConverter;
 import org.webpieces.router.api.extensions.SimpleStorage;
@@ -21,6 +22,7 @@ import org.webpieces.service.SimpleStorageImpl;
 import org.webpieces.service.SomeLibrary;
 import org.webpieces.service.SomeLibraryImpl;
 import org.webpieces.web.login.BackendLoginImpl;
+import org.webpieces.web.tags.MyHtmlTagCreator;
 
 public class GuiceModule implements Module {
 
@@ -44,7 +46,10 @@ public class GuiceModule implements Module {
 		Multibinder<ObjectStringConverter> conversionBinder = Multibinder.newSetBinder(binder, ObjectStringConverter.class);
 		conversionBinder.addBinding().to(EducationEnum.WebConverter.class);
 		conversionBinder.addBinding().to(RoleEnum.WebConverter.class);
-	    
+
+		Multibinder<HtmlTagCreator> htmlTagCreators = Multibinder.newSetBinder(binder, HtmlTagCreator.class);
+		htmlTagCreators.addBinding().to(MyHtmlTagCreator.class);
+		
 	    binder.bind(SomeLibrary.class).to(SomeLibraryImpl.class);
 	    binder.bind(RemoteService.class).to(RemoteServiceImpl.class).asEagerSingleton();
 
