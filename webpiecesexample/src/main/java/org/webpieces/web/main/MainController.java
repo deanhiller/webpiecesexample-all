@@ -19,7 +19,7 @@ import com.webpieces.http2engine.api.StreamWriter;
 import com.webpieces.http2parser.api.dto.DataFrame;
 import com.webpieces.http2parser.api.dto.lib.StreamMsg;
 
-import org.webpieces.GlobalAppContext;
+import org.webpieces.base.GlobalAppContext;
 import org.webpieces.mgmt.SomeBean;
 import org.webpieces.service.RemoteService;
 import org.webpieces.service.SomeLibrary;
@@ -77,7 +77,9 @@ public class MainController {
 		return Actions.renderThis();
 	}
 	
-	public Render internalError() {
+	public Render internalError() {		
+		Current.flash().clear();
+		Current.validation().clear();
 		return Actions.renderThis();
 	}
 

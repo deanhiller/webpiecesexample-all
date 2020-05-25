@@ -1,13 +1,13 @@
 package org.webpieces;
 
-import org.webpieces.templatingdev.api.DevTemplateModule;
-import org.webpieces.templatingdev.api.TemplateCompileConfig;
 import org.webpieces.webserver.api.ServerConfig;
 
 import com.google.inject.Module;
 
-import org.webpieces.meta.JavaCache;
-import org.webpieces.meta.ServerUtil;
+import org.webpieces.basesvr.YourCompanyServer;
+import org.webpieces.services.DevConfig;
+import org.webpieces.services.DevServerUtil;
+import org.webpieces.services.YourCompanyProdServerForIDE;
 
 /**
  * Uses the production Router but the dev template compiler so you 'could' step through prod router code
@@ -16,7 +16,7 @@ import org.webpieces.meta.ServerUtil;
  * TODO: modify this to compile ALL gradle groovy template *.class files (ones generated from the html) and then we
  * could run full production mode from the IDE
  */
-public class ProdServerForIDE extends DevServer {
+public class ProdServerForIDE extends YourCompanyProdServerForIDE {
 	
 	//NOTE: This whole project brings in jars that the main project does not have and should never
 	//have like the eclipse compiler(a classloading compiler jar), webpieces runtimecompile.jar
@@ -24,31 +24,20 @@ public class ProdServerForIDE extends DevServer {
 	//webserver classes to put in a place a runtime compiler so we can compile your code as you
 	//develop
 	public static void main(String[] args) throws InterruptedException {
-		ServerUtil.start(() -> new ProdServerForIDE(false));
+		DevServerUtil.start(() -> new ProdServerForIDE(false));
 	}
 	
-	private Server server;
-
 	public ProdServerForIDE(boolean usePortZero) {
-		super(usePortZero);
-		TemplateCompileConfig templateConfig = new TemplateCompileConfig(srcPaths);
-
-		//swap components for on-demand template compile only and the rest behaves like prod ONLY
-		//because you don't want to have to run gradle on every change(instead just restart server!)
-		Module platformOverrides = new DevTemplateModule(templateConfig);
-
-		ServerConfig config = new ServerConfig(JavaCache.getCacheLocation(), false);
-		//It is very important to turn off caching or developers will get very confused when they
-		//change stuff and they don't see changes in the website
-		config.setStaticFileCacheTimeSeconds(null);
-		
-		server = new Server(platformOverrides, null, config, args );
-	}
-	
-
-	
-	public void start() {
-		server.start();		
+		super("webpiecesexample", usePortZero);
 	}
 
+	@Override
+	protected YourCompanyServer createServer(Module platformOverrides, ServerConfig config, String ... args) {
+		return new Server(platformOverrides, null, config, args);
+	}
+
+	@Override
+	protected DevConfig getConfig() {
+		return new OurDevConfig();
+	}
 }

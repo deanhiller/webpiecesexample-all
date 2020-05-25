@@ -1,70 +1,46 @@
 package org.webpieces;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.webpieces.compiler.api.CompileConfig;
-import org.webpieces.devrouter.api.DevRouterModule;
-import org.webpieces.templatingdev.api.DevTemplateModule;
-import org.webpieces.templatingdev.api.TemplateCompileConfig;
-import org.webpieces.util.file.VirtualFile;
 import org.webpieces.webserver.api.ServerConfig;
 
 import com.google.inject.Module;
-import com.google.inject.util.Modules;
 
-import org.webpieces.meta.JavaCache;
-import org.webpieces.meta.ServerUtil;
+import org.webpieces.basesvr.YourCompanyServer;
+import org.webpieces.services.DevConfig;
+import org.webpieces.services.DevServerUtil;
+import org.webpieces.services.YourCompanyDevelopmentServer;
 
-public class DevelopmentServer extends DevServer {
+/**
+ * What's awesome about writing code on the DevelopmentServer is we can put validation/failures in place that are not in the
+ * production server so developers can catch them.  Things like validating flash.keep(true or false) is called to make sure
+ * flash is being done correctly and not missed on post methods.  
+ * 
+ * We also log NotFouund as an error.
+ * We swap out the production NotFoudn page with a version that shows the prod one AND lists all routes so you can see why your
+ * route did not match!!
+ * 
+ */
+public class DevelopmentServer extends YourCompanyDevelopmentServer {
 
-	private static final Logger log = LoggerFactory.getLogger(Server.class);
-	
 	//NOTE: This whole project brings in jars that the main project does not have and should never
 	//have like the eclipse compiler(a classloading compiler jar), webpieces runtimecompile.jar
 	//and finally the http-router-dev.jar which has the guice module that overrides certain core
 	//webserver classes to put in a place a runtime compiler so we can compile your code as you
 	//develop
 	public static void main(String[] args) throws InterruptedException {
-		ServerUtil.start(() -> new DevelopmentServer(false));
+		DevServerUtil.start(() -> new DevelopmentServer(false));
 	}
 	
-	private Server server;
-
 	public DevelopmentServer(boolean usePortZero) {
-		super(usePortZero);
-		
-		VirtualFile metaFile = directory.child("webpiecesexample/src/main/resources/appmetadev.txt");
-		log.info("LOADING from meta file="+metaFile.getCanonicalPath());
-
-		Module platformOverrides = swapComponentsForDevServer();
-		
-		ServerConfig config = new ServerConfig(JavaCache.getCacheLocation(), false);
-		//It is very important to turn off BROWSER caching or developers will get very confused when they
-		//change stuff and they don't see changes in the website
-		config.setStaticFileCacheTimeSeconds(null);
-		config.setMetaFile(metaFile);
-		
-		server = new Server(platformOverrides, null, config, args);
+		super("webpiecesexample", usePortZero);
 	}
 
-	private Module swapComponentsForDevServer() {
-		//html and json template file encoding...
-		TemplateCompileConfig templateConfig = new TemplateCompileConfig(srcPaths);
-		
-		//java source files encoding...
-		CompileConfig devConfig = new CompileConfig(srcPaths, CompileConfig.getHomeCacheDir("webpiecesexampleCache/devserver-bytecode"));
-		Module platformOverrides = Modules.combine(
-										new DevRouterModule(devConfig),
-										new DevTemplateModule(templateConfig));
-		return platformOverrides;
-	}
-	
-	public void start() {
-		server.start();		
+	@Override
+	protected YourCompanyServer createServer(Module platformOverrides, Module appOverrides, ServerConfig config, String... args) {
+		return new Server(platformOverrides, null, config, args);
 	}
 
-	public void stop() {
-		server.stop();
+	@Override
+	protected DevConfig getConfig() {
+		return new OurDevConfig();
 	}
-
 }

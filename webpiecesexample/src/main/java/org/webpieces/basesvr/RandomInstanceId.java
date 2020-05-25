@@ -1,4 +1,4 @@
-package org.webpieces.base;
+package org.webpieces.basesvr;
 
 import org.apache.commons.lang3.RandomStringUtils;
 

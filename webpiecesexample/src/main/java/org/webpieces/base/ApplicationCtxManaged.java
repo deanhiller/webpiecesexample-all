@@ -1,4 +1,4 @@
-package org.webpieces;
+package org.webpieces.base;
 
 public interface ApplicationCtxManaged {
 
