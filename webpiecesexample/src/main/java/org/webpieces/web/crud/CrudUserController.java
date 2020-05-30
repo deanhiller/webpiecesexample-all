@@ -104,7 +104,8 @@ public class CrudUserController {
 			Em.get().persist(role);
 		}
 
-		//WTF...this now can save an entity that did not exist before...fun times.
+		//WTF...this now can update an entity that did not exist before...fun times.
+		//Docs say it should throw "@throws EntityExistsException if the entity already exists." but that's not working!! 
 		Em.get().persist(entity);
         Em.get().flush();
         
