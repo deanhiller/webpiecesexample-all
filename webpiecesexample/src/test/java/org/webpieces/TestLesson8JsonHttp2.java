@@ -14,6 +14,9 @@ import org.slf4j.LoggerFactory;
 import org.webpieces.data.api.DataWrapper;
 import org.webpieces.data.api.DataWrapperGenerator;
 import org.webpieces.data.api.DataWrapperGeneratorFactory;
+import org.webpieces.http2client.api.Http2Client;
+import org.webpieces.http2client.api.Http2ClientConfig;
+import org.webpieces.http2client.api.Http2ClientFactory;
 import org.webpieces.http2client.api.Http2Socket;
 import org.webpieces.http2client.api.dto.FullRequest;
 import org.webpieces.http2client.api.dto.FullResponse;
@@ -22,6 +25,7 @@ import org.webpieces.webserver.test.Asserts;
 import org.webpieces.webserver.test.ResponseExtract;
 import org.webpieces.webserver.test.http2.AbstractHttp2Test;
 import org.webpieces.webserver.test.http2.ResponseWrapperHttp2;
+import org.webpieces.webserver.test.http2.TestMode;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -59,7 +63,25 @@ public class TestLesson8JsonHttp2 extends AbstractHttp2Test {
 	private Http2Socket http2Socket;
 	private ObjectMapper mapper = new ObjectMapper();
 	private SimpleMeterRegistry metrics;
-	
+
+
+	@Override
+	protected TestMode getTestMode() {
+		//This mode slows things down but you can step through client and server http2 parser/hpack/engine etc.
+		//If you are a beginner run in EMBEDDED_DIRET_NO_PARSING mode as it's faster AND you can step through 
+		//the main stuff you care about(not the http2 protocol stuff).
+		return TestMode.EMBEDDED_PARSING;
+	}
+
+	//The default in superclass is an http2 client on top of an http1.1 protocol.
+	//by overridding here, we can use an http2 client on http2 protocol ONLY IF isRemote() returns true
+	@Override
+	protected Http2Client createRemoteClient() {
+		SimpleMeterRegistry metrics = new SimpleMeterRegistry();
+		Http2ClientConfig config = new Http2ClientConfig();
+		return Http2ClientFactory.createHttpClient(config, metrics);		
+	}
+
 	@Before
 	public void setUp() {
 		log.info("Setting up test");
@@ -132,6 +154,7 @@ public class TestLesson8JsonHttp2 extends AbstractHttp2Test {
 	public static FullRequest createRequest(String uri, DataWrapper body) {
 		Http2Request req = new Http2Request();
 		req.addHeader(new Http2Header(Http2HeaderName.AUTHORITY, "yourdomain.com"));
+		req.addHeader(new Http2Header(Http2HeaderName.SCHEME, "https"));
 		req.addHeader(new Http2Header(Http2HeaderName.METHOD, "GET"));
 		req.addHeader(new Http2Header(Http2HeaderName.PATH, uri));
 		req.addHeader(new Http2Header(Http2HeaderName.CONTENT_LENGTH, body.getReadableSize()+""));
