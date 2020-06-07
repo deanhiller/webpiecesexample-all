@@ -1,8 +1,10 @@
-package org.webpieces.web.crudajax;
+package org.webpieces.web.secure.crud;
 
-import static org.webpieces.web.crudajax.AjaxCrudUserRouteId.AJAX_LIST_USERS;
+import static org.webpieces.web.secure.crud.CrudUserRouteId.GET_ADD_USER_FORM;
+import static org.webpieces.web.secure.crud.CrudUserRouteId.GET_EDIT_USER_FORM;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
@@ -11,45 +13,56 @@ import javax.persistence.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.webpieces.ctx.api.Current;
-import org.webpieces.plugins.hibernate.Em;
+import org.webpieces.plugin.hibernate.Em;
+import org.webpieces.plugin.hibernate.UseQuery;
 import org.webpieces.router.api.controller.actions.Action;
 import org.webpieces.router.api.controller.actions.Actions;
+import org.webpieces.router.api.controller.actions.FlashAndRedirect;
 import org.webpieces.router.api.controller.actions.Redirect;
 import org.webpieces.router.api.controller.actions.Render;
 
+import org.webpieces.db.EducationEnum;
+import org.webpieces.db.RoleEnum;
 import org.webpieces.db.UserDbo;
 import org.webpieces.db.UserRole;
 
 @Singleton
-public class AjaxCrudUserController {
+public class CrudUserController {
 
-	private static Logger log = LoggerFactory.getLogger(AjaxCrudUserController.class);
+	private static Logger log = LoggerFactory.getLogger(CrudUserController.class);
 	
 	public Action userList() {
+		
 		EntityManager mgr = Em.get();
 		Query query = mgr.createNamedQuery("findAllUsers");
 		@SuppressWarnings("unchecked")
 		List<UserDbo> users = query.getResultList();
-		boolean showEditPopup = Current.flash().isShowEditPopup();
-		return Actions.renderThis(
-				"users", users,
-				"showPopup", showEditPopup);
+		return Actions.renderThis("users", users);
 	}
 	
-	public Action userAddEdit(Integer id) {		
+	public Action userAddEdit(Integer id) {
 		if(id == null) {
 			return Actions.renderThis(
 					"entity", new UserDbo(),
+					"levels", EducationEnum.values(),
+					"roles", RoleEnum.values(),
+					"selectedRoles", null,
 					"password", null);
 		}
-
-		UserDbo user = Em.get().find(UserDbo.class, id);
+		
+		UserDbo user = UserDbo.findWithJoin(Em.get(), id);
+		List<UserRole> roles = user.getRoles();
+		List<RoleEnum> selectedRoles = roles.stream().map(r -> r.getRole()).collect(Collectors.toList());
 		return Actions.renderThis(
 				"entity", user,
+				"levels", EducationEnum.values(),
+				"roles", RoleEnum.values(),
+				"selectedRoles", selectedRoles,
 				"password", null);
 	}
 
-	public Redirect postSaveUser(UserDbo entity, String password) {
+	public Redirect postSaveUser(@UseQuery("findByIdWithRoleJoin") UserDbo entity, 
+			List<RoleEnum> selectedRoles, String password) {
 		//TODO: if we wire in JSR303 bean validation into the platform, it could be 
 		//done there as well though would
 		//need to figure out how to do i18n for the messages in that case
@@ -58,7 +71,7 @@ public class AjaxCrudUserController {
 		} else if(password.length() < 4) {
 			Current.validation().addError("password", "Value is too short");
 		}
-		
+
 		if(entity.getFirstName() == null) {
 			Current.validation().addError("entity.firstName", "First name is required");
 		} else if(entity.getFirstName().length() < 3) {
@@ -69,32 +82,41 @@ public class AjaxCrudUserController {
 		//the form with what the user typed in along with errors
 		if(Current.validation().hasErrors()) {
 			log.info("page has errors");
-			Current.flash().setError("Errors in form below");
-			return Actions.redirectFlashAllSecure(AJAX_LIST_USERS, Current.getContext(), "password");
+			FlashAndRedirect redirect = new FlashAndRedirect(Current.getContext(), "Errors in form below");
+			redirect.setSecureFields("entity.password"); //make sure secure fields are not put in flash cookie!!!
+			redirect.setIdFieldAndValue("id", entity.getId());
+			return Actions.redirectFlashAll(GET_ADD_USER_FORM, GET_EDIT_USER_FORM, redirect);
 		}
-		
-		//In an AJAX form, we post a special _showEditPopup in the form parameters.  We need to clear this out
-		//so the page does not load the popup.  Above, if there are errors, we use that flag to popup a window.
-		//This also helps ajax forms and their data survive logging in(ie. user types data in and is redirected to
-		//a login page.  After he logs in, he comes back to his ajax window with the data still there...yeah!!!)
-		//we need to reset this so we don't show the edit popup
-		Current.flash().setShowEditPopup(false);
-		
+
 		Current.flash().setMessage("User successfully saved");
 		Current.flash().keep(true);
 		Current.validation().keep(false);
+
 		
-		Em.get().merge(entity);
+		List<UserRole> roles = entity.getRoles();
+		for(UserRole r : roles) {
+			Em.get().remove(r);
+		}
+		roles.clear();
+		
+		for(RoleEnum r : selectedRoles) {
+			UserRole role = new UserRole(entity, r);
+			Em.get().persist(role);
+		}
+
+		//WTF...this now can update an entity that did not exist before...fun times.
+		//Docs say it should throw "@throws EntityExistsException if the entity already exists." but that's not working!! 
+		Em.get().persist(entity);
         Em.get().flush();
         
-		return Actions.redirect(AjaxCrudUserRouteId.AJAX_LIST_USERS);
+		return Actions.redirect(CrudUserRouteId.LIST_USERS);
 	}
 
 	public Render confirmDeleteUser(int id) {
 		UserDbo user = Em.get().find(UserDbo.class, id);
 		return Actions.renderThis("entity", user);
 	}
-
+	
 	public Redirect postDeleteUser(int id) {
 		UserDbo ref = Em.get().find(UserDbo.class, id);
 		List<UserRole> roles = ref.getRoles();
@@ -107,6 +129,6 @@ public class AjaxCrudUserController {
 		Current.flash().setMessage("User deleted");
 		Current.flash().keep(true);
 		Current.validation().keep(false);
-		return Actions.redirect(AjaxCrudUserRouteId.AJAX_LIST_USERS);
+		return Actions.redirect(CrudUserRouteId.LIST_USERS);
 	}
 }

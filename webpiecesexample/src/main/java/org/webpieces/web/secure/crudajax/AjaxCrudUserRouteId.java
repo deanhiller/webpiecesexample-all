@@ -1,4 +1,4 @@
-package org.webpieces.web.crudajax;
+package org.webpieces.web.secure.crudajax;
 
 import org.webpieces.router.api.routes.RouteId;
 

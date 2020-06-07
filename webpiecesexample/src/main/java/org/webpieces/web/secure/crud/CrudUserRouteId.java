@@ -1,4 +1,4 @@
-package org.webpieces.web.crud;
+package org.webpieces.web.secure.crud;
 
 import org.webpieces.router.api.routes.RouteId;
 
