@@ -131,7 +131,7 @@ public class DbSettingsInMemory implements PersistenceUnitInfo {
 
 	@Override
 	public ValidationMode getValidationMode() {
-		return ValidationMode.NONE;
+		return ValidationMode.AUTO;
 	}
 
 	@Override

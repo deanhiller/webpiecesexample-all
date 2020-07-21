@@ -19,6 +19,9 @@ import javax.persistence.OneToMany;
 import javax.persistence.Query;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
+
+import org.hibernate.validator.constraints.Length;
 
 @Entity
 @Table(name="USERS", 
@@ -43,6 +46,8 @@ public class UserDbo {
 
 	private String phone;
 	private String name;
+	
+	@NotBlank @Length(min=2, max=20)
 	private String firstName;
 	private String lastName;
 	
