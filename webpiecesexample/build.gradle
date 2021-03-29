@@ -1,6 +1,5 @@
 buildscript {
     repositories {
-       jcenter()
        mavenCentral()
        maven {
           url "https://dl.bintray.com/deanhiller/maven"
