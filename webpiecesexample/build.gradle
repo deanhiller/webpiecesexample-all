@@ -1,24 +1,8 @@
-buildscript {
-    repositories {
-       jcenter()
-       mavenCentral()
-       maven {
-          url "https://dl.bintray.com/deanhiller/maven"
-       }
-
-       //For testing and to be removed...
-       maven {
-         url uri('/tmp/myRepo/')
-       }
-    }
-    dependencies {
-        classpath "org.webpieces:gradle-plugin-htmlcompiler:${webpiecesVersion}"
-    }
+plugins {
+    id 'application'
+    id 'idea'
+    id 'org.webpieces.htmlcompiler' version '2.0.151'
 }
-
-apply plugin: 'application'
-apply plugin: 'idea'
-apply plugin: 'org.webpieces.templatecompiler'
 
 //Intellij Idea has a weird quirk we need to avoid
 if (System.getProperty('idea.active')) {
