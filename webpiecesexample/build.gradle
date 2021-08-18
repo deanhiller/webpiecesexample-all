@@ -39,6 +39,7 @@ dependencies {
   
   compile deps['commons-lang'] //used in json escaping
   compile deps['javax-validation']
+  compile deps['hibernate-validator']
  
   //REMOVE once you are on a real database as there is a line testCompile deps['plugin-h2'] that brings this in for tests
   //AND we only use this so you work out of the box to start hacking 

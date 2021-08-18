@@ -20,7 +20,7 @@ ext {
        'web-webserver':      "org.webpieces:http-webserver:${webpiecesVersion}",
        'web-webserver-test': "org.webpieces:http-webserver-test:${webpiecesVersion}",
        'web-devrouter':      "org.webpieces:http-router-dev:${webpiecesVersion}",
-       'web-devtemplating':  "org.webpieces:http-templating-dev:${webpiecesVersion}",
+       'web-devtemplating':  "org.webpieces:http-templating-dev-lib:${webpiecesVersion}",
        'core-mock':          "org.webpieces:core-mock:${webpiecesVersion}",
        'core-ddl':           "org.webpieces:core-ddl:${webpiecesVersion}",
        'plugin-hibernate':   "org.webpieces:plugin-hibernate:${webpiecesVersion}",
@@ -36,6 +36,7 @@ ext {
        
        'plugin-h2':          "org.webpieces:plugin-h2db:${webpiecesVersion}",
        'plugin-webpieces-documentation': "org.webpieces:plugin-documentation:${webpiecesVersion}",
+       'hibernate-validator': 'org.hibernate.validator:hibernate-validator:6.2.0.Final',
 
        'selenium':        'org.seleniumhq.selenium:selenium-java:2.53.1',
        'h2db':            'com.h2database:h2:1.4.192',
