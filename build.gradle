@@ -30,6 +30,7 @@ ext {
        'plugin-jackson':     "org.webpieces:plugin-json-jackson:${webpiecesVersion}",
        'plugin-properties':  "org.webpieces:plugin-properties:${webpiecesVersion}",
        'commons-lang':       "org.apache.commons:commons-lang3:3.5",
+       'javax-validation':   'jakarta.validation:jakarta.validation-api:2.0.2',
        'junit':           'junit:junit:4.11',  
        'joda-time':       'joda-time:joda-time:2.9.4',
        
