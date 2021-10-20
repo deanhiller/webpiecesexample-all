@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.webpieces.microsvc.server.api.RESTApiRoutes;
 import org.webpieces.plugin.backend.BackendPlugin;
 import org.webpieces.plugin.hibernate.HibernatePlugin;
 import org.webpieces.plugin.json.JacksonConfig;
@@ -21,7 +22,9 @@ import com.google.common.collect.Lists;
 import com.google.inject.Module;
 
 import org.webpieces.basesvr.YourGlobalModule;
+import org.webpieces.json.JsonController;
 import org.webpieces.json.JsonRoutes;
+import org.webpieces.json.SaveApi;
 import org.webpieces.web.login.LoginRoutes;
 import org.webpieces.web.main.MainRoutes;
 import org.webpieces.web.secure.crud.CrudRoutes;
@@ -63,6 +66,7 @@ public class ProdServerMeta implements WebAppMeta {
 	@Override
     public List<Routes> getRouteModules() {
 		return Lists.newArrayList(
+				new RESTApiRoutes(SaveApi.class, JsonController.class),
 				new MainRoutes(),
 				//The Controller package regex is org.webpieces.web.secure\..* so that we match org.webpieces.web.secure.* Controllers 
 				new LoginRoutes("/org/webpieces/web/login/AppLoginController", "org.webpieces.web.secure\\..*", "password"),
@@ -82,8 +86,9 @@ public class ProdServerMeta implements WebAppMeta {
 				//if you want to remove hibernate, just remove it first from the build file and then remove
 				//all the compile error code(it will remove more than half of the jar size of the web app actually due
 				//to transitive dependencies)
-				new HibernatePlugin(pluginConfig.getCmdLineArguments()),
-				new JacksonPlugin(new JacksonConfig("/json/.*")),
+				new HibernatePlugin(pluginConfig.getCmdLineArguments(), false),
+				//ANY controllers in json package or subpackages are run through this filter independent of the url
+				new JacksonPlugin(new JacksonConfig().setPackageFilterPattern("org.webpieces.json.*")),
 				new BackendPlugin(pluginConfig.getCmdLineArguments()),
 				new PropertiesPlugin(new PropertiesConfig()),
 				new InstallSslCertPlugin(new InstallSslCertConfig("acme://letsencrypt.org/staging"))

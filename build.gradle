@@ -11,35 +11,40 @@ ext {
     /*
      * Dependencies can be named so that sub-projects can reference consistent version of them.
      * dependencies {
-     *     compile deps['joda-time']
+     *     implementation deps['joda-time']
      * }
      *
      * This list is NOT who you depend on but just a Map of String, String...
      */
     deps = [
-       'web-webserver':      "org.webpieces:http-webserver:${webpiecesVersion}",
-       'web-webserver-test': "org.webpieces:http-webserver-test:${webpiecesVersion}",
-       'web-devrouter':      "org.webpieces:http-router-dev:${webpiecesVersion}",
-       'web-devtemplating':  "org.webpieces:http-templating-dev-lib:${webpiecesVersion}",
-       'core-mock':          "org.webpieces:core-mock:${webpiecesVersion}",
-       'core-ddl':           "org.webpieces:core-ddl:${webpiecesVersion}",
-       'plugin-hibernate':   "org.webpieces:plugin-hibernate:${webpiecesVersion}",
-       'plugin-backend':     "org.webpieces:plugin-backend:${webpiecesVersion}",
-       'plugin-install-sslcert': "org.webpieces:plugin-install-sslcert:${webpiecesVersion}", 
-       'plugin-webpieces-documentation': "org.webpieces:plugin-webpieces-documentation:${webpiecesVersion}",
-       'plugin-jackson':     "org.webpieces:plugin-json-jackson:${webpiecesVersion}",
-       'plugin-properties':  "org.webpieces:plugin-properties:${webpiecesVersion}",
+       'web-webserver':      "org.webpieces.server:http-webserver:${webpiecesVersion}",
+       'web-webserver-test': "org.webpieces.server:http-webserver-test:${webpiecesVersion}",
+       'web-devrouter':      "org.webpieces.server:http-router-dev:${webpiecesVersion}",
+       'web-devtemplating':  "org.webpieces.template:http-templating-dev-lib:${webpiecesVersion}",
+       'generate-httpclient':"org.webpieces.cloud:generate-httpclient:${webpiecesVersion}",
+       'server-scaffolding': "org.webpieces.cloud:server-scaffolding:${webpiecesVersion}",
+
+       'core-mock':          "org.webpieces.core:core-mock:${webpiecesVersion}",
+       'core-ddl':           "org.webpieces.core:core-ddl:${webpiecesVersion}",
+       'plugin-hibernate':   "org.webpieces.server.plugin:plugin-hibernate:${webpiecesVersion}",
+       'plugin-backend':     "org.webpieces.server.plugin:plugin-backend:${webpiecesVersion}",
+       'plugin-install-sslcert': "org.webpieces.server.plugin:plugin-install-sslcert:${webpiecesVersion}",
+       'plugin-webpieces-documentation': "org.webpieces.server.plugin:plugin-webpieces-documentation:${webpiecesVersion}",
+       'plugin-jackson':     "org.webpieces.server.plugin:plugin-json-jackson:${webpiecesVersion}",
+       'plugin-properties':  "org.webpieces.server.plugin:plugin-properties:${webpiecesVersion}",
        'commons-lang':       "org.apache.commons:commons-lang3:3.5",
        'javax-validation':   'jakarta.validation:jakarta.validation-api:2.0.2',
-       'junit':           'junit:junit:4.11',  
-       'joda-time':       'joda-time:joda-time:2.9.4',
-       
-       'plugin-h2':          "org.webpieces:plugin-h2db:${webpiecesVersion}",
-       'plugin-webpieces-documentation': "org.webpieces:plugin-documentation:${webpiecesVersion}",
+       'junit':              'junit:junit:4.11',
+       'joda-time':          'joda-time:joda-time:2.9.4',
+
+       'jul-to-slf4j':       'org.slf4j:jul-to-slf4j:1.7.25',
+
+       'plugin-h2':          "org.webpieces.server.plugin:plugin-h2db:${webpiecesVersion}",
+       'plugin-webpieces-documentation': "org.webpieces.server.plugin:plugin-documentation:${webpiecesVersion}",
        'hibernate-validator': 'org.hibernate.validator:hibernate-validator:6.2.0.Final',
 
-       'selenium':        'org.seleniumhq.selenium:selenium-java:2.53.1',
-       'h2db':            'com.h2database:h2:1.4.192',
+       'selenium':          'org.seleniumhq.selenium:selenium-java:2.53.1',
+       'h2db':              'com.h2database:h2:1.4.192',
        //These next two are in case you have libraries that want to use an
        //http-client or a nio library...
        //'web-channelmgr':  "org.webpieces:core-channelmanager2:${webpiecesVersion}",
@@ -50,7 +55,7 @@ ext {
 
        'hikari-cp':     'org.hibernate:hibernate-hikaricp:5.4.10.Final'
 
-    ]  
+    ]
 }
 
 allprojects {
@@ -72,9 +77,9 @@ subprojects {
    apply plugin: 'eclipse'
    apply plugin: 'idea'
 
-   //These 2 lines make it so you don't have to use @Param annotation on 
+   //These 2 lines make it so you don't have to use @Param annotation on
    //every controller method which can get quite annoying.  Instead, webpieces
-   //will just use reflection to grab the param names which is just as fast as 
+   //will just use reflection to grab the param names which is just as fast as
    //annotations
    [compileJava, compileTestJava]*.options.collect {options ->
      options.compilerArgs.add '-parameters'
@@ -92,23 +97,28 @@ subprojects {
        configFile = rootProject.file('config/checkstyle.xml')
    }
 
+    configurations {
+       customConfig.extendsFrom implementation
+    }
+
    dependencies {
-       testCompile deps['junit']
+       testImplementation deps['junit']
 
        //add global dependencies for all projects here....
-       //compile deps['some jar from the above map of defined jars and versions']
+       implementation deps['web-webserver']
 
        //This line includes any jars a developer drops into {project}/lib directory
-       compile fileTree(dir: 'lib', include: '*.jar')
+       implementation fileTree(dir: 'lib', include: '*.jar')
    }
 
    //This copies new jars over from ivy/maven and project/lib and finally our built up jar so all jars are in
    //one output directory AND it deletes jars in there that are no longer part of any of those locations as well since
    //it is a task of type: Sync
    task syncJars(type: Sync, dependsOn: 'jar') {
-       from(configurations.compile) {}
+       configurations.implementation.setCanBeResolved(true)
+       from(configurations.implementation) {}
        from(fixedLibDir) {}
-       from(libsDir) {}
+       from(libsDirectory) {}
        into toStagingDir
    }
 
@@ -125,7 +135,7 @@ subprojects {
       testLogging {
         events "failed"
         exceptionFormat "full"
-      } 
+      }
 
       systemProperty "gradle.running", "true"
    }
@@ -158,11 +168,6 @@ task codeCoverage(type: org.gradle.testing.jacoco.tasks.JacocoReport) {
     }
     onlyIf = {
         true
-    }
-    doFirst {
-        executionData.from files(executionData.findAll {
-            it.exists()
-        })
     }
 }
 
