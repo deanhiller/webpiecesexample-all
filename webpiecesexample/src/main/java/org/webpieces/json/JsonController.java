@@ -25,6 +25,7 @@ import com.webpieces.http2.api.streaming.StreamWriter;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.webpieces.service.RemoteService;
+import org.webpieces.util.futures.XFuture;
 
 @Singleton
 public class JsonController implements SaveApi, ClientApi {
@@ -99,7 +100,7 @@ public class JsonController implements SaveApi, ClientApi {
 		Http2Response response = handle.createBaseResponse(requestCtx.getRequest().originalRequest, "text/plain", 200, "Ok");
 		response.setEndOfStream(false);
 		
-		CompletableFuture<StreamWriter> responseWriter = handle.process(response);
+		XFuture<StreamWriter> responseWriter = handle.process(response);
 		return new RequestStreamEchoWriter(requestCtx, handle, responseWriter);
 	}
 
@@ -114,31 +115,20 @@ public class JsonController implements SaveApi, ClientApi {
 		return CompletableFuture.completedFuture(resp);
 	}
 
-	@Override
-	@Jackson
-	public CompletableFuture<MethodResponse> method(String id, int number) {
-		return CompletableFuture.completedFuture(new MethodResponse(number, id));
-	}
-
-	@Override
-	public CompletableFuture<PostTestResponse> postTest(String id, int number, @Jackson PostTestRequest request) {
-		return CompletableFuture.completedFuture(new PostTestResponse(id, number, request.getSomething()));
-	}
-
 	private static class RequestStreamEchoWriter implements StreamWriter, StreamRef {
 
 		private AtomicInteger total = new AtomicInteger();
-		private CompletableFuture<StreamWriter> responseWriter;
+		private XFuture<StreamWriter> responseWriter;
 		private RouterStreamHandle handle; // in case you want to cancel the request
 
 		public RequestStreamEchoWriter(RequestContext requestCtx, RouterStreamHandle handle,
-				CompletableFuture<StreamWriter> responseWriter2) {
+				XFuture<StreamWriter> responseWriter2) {
 			this.responseWriter = responseWriter2;
 			this.handle = handle;
 		}
 
 		@Override
-		public CompletableFuture<Void> processPiece(StreamMsg data) {
+		public XFuture<Void> processPiece(StreamMsg data) {
 			RequestContext requestCtx = Current.getContext(); 
 
 			DataFrame f = (DataFrame) data;
@@ -155,19 +145,19 @@ public class JsonController implements SaveApi, ClientApi {
 		}
 
 		@Override
-		public CompletableFuture<StreamWriter> getWriter() {
+		public XFuture<StreamWriter> getWriter() {
 			//let's make it wait for our response to be written by 
 			//chaining with responseWriter future here
 			return responseWriter.thenApply(s -> this);
 		}
 
 		@Override
-		public CompletableFuture<Void> cancel(CancelReason reason) {
+		public XFuture<Void> cancel(CancelReason reason) {
 			//here if using http client, we may forward to next stream like so
 			//responseStream.cancel(reason);
 			//but since the responseStream and request is the same, we can just stop sending instead
 			//which happens automatically since they stopped sending(ie. nothing to do here
-			return CompletableFuture.completedFuture(null);
+			return XFuture.completedFuture(null);
 		}
 
 	}

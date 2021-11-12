@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.webpieces.webserver.api.ServerConfig;
 import org.webpieces.webserver.test.Asserts;
 import org.webpieces.Server;
+import org.webpieces.json.ExampleRestAPI;
 import org.webpieces.json.SaveApi;
 import org.webpieces.mock.JavaCache;
 import org.webpieces.mock.MockRemoteSystem;
@@ -31,6 +32,7 @@ public class FeatureTest extends CompanyTest {
     private String[] args = { "-http.port=:0", "-https.port=:0", "-hibernate.persistenceunit=org.webpieces.db.DbSettingsInMemory", "-hibernate.loadclassmeta=true" };
 
     protected SaveApi dataSaveApi;
+    protected ExampleRestAPI restAPI;
     protected MockRemoteSystem mockRemoteService = new MockRemoteSystem();
     protected SimpleMeterRegistry metrics;
 
@@ -39,6 +41,7 @@ public class FeatureTest extends CompanyTest {
         log.info("Setting up test");
         super.initialize();
         dataSaveApi = super.createRestClient(SaveApi.class);
+        restAPI = super.createRestClient(ExampleRestAPI.class);
     }
 
     @Override

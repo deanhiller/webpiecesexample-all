@@ -20,6 +20,7 @@ import org.webpieces.http2client.api.Http2ClientFactory;
 import org.webpieces.http2client.api.Http2Socket;
 import org.webpieces.http2client.api.dto.FullRequest;
 import org.webpieces.http2client.api.dto.FullResponse;
+import org.webpieces.util.futures.XFuture;
 import org.webpieces.webserver.api.ServerConfig;
 import org.webpieces.webserver.test.Asserts;
 import org.webpieces.webserver.test.ResponseExtract;
@@ -122,7 +123,7 @@ public class TestLesson8JsonHttp2 extends AbstractHttp2Test {
 		try {
 			FullRequest req = createHttpRequest(searchReq);
 	
-			CompletableFuture<FullResponse> respFuture = http2Socket.send(req);
+			XFuture<FullResponse> respFuture = http2Socket.send(req);
 			
 			return waitAndTranslateResponse(respFuture);
 		} catch (Throwable e) {
@@ -130,7 +131,7 @@ public class TestLesson8JsonHttp2 extends AbstractHttp2Test {
 		}
 	}
 
-	private SearchResponse waitAndTranslateResponse(CompletableFuture<FullResponse> respFuture)
+	private SearchResponse waitAndTranslateResponse(XFuture<FullResponse> respFuture)
 			throws InterruptedException, ExecutionException, TimeoutException, IOException, JsonParseException,
 			JsonMappingException {
 		

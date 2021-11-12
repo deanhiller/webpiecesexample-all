@@ -12,6 +12,7 @@ import javax.persistence.EntityManagerFactory;
 import org.webpieces.router.api.extensions.SimpleStorage;
 
 import org.webpieces.db.SimpleStorageDbo;
+import org.webpieces.util.futures.XFuture;
 
 public class SimpleStorageImpl implements SimpleStorage {
 	
@@ -23,7 +24,7 @@ public class SimpleStorageImpl implements SimpleStorage {
 	}
 
 	@Override
-	public CompletableFuture<Void> save(String key, String subKey, String value) {
+	public XFuture<Void> save(String key, String subKey, String value) {
 		EntityManager mgr = factory.createEntityManager();
 		mgr.getTransaction().begin();
 
@@ -36,11 +37,11 @@ public class SimpleStorageImpl implements SimpleStorage {
 		mgr.getTransaction().commit();
 		mgr.close();
 		
-		return CompletableFuture.completedFuture(null);
+		return XFuture.completedFuture(null);
 	}
 	
 	@Override
-	public CompletableFuture<Void> save(String key, Map<String, String> properties) {
+	public XFuture<Void> save(String key, Map<String, String> properties) {
 		EntityManager mgr = factory.createEntityManager();
 		mgr.getTransaction().begin();
 
@@ -60,11 +61,11 @@ public class SimpleStorageImpl implements SimpleStorage {
 		mgr.getTransaction().commit();
 		mgr.close();
 		
-		return CompletableFuture.completedFuture(null);
+		return XFuture.completedFuture(null);
 	}
 
 	@Override
-	public CompletableFuture<Map<String, String>> read(String key) {
+	public XFuture<Map<String, String>> read(String key) {
 		EntityManager mgr = factory.createEntityManager();
 		//mgr.getTransaction().begin();
 		
@@ -76,11 +77,11 @@ public class SimpleStorageImpl implements SimpleStorage {
 		
 		mgr.close();
 		
-		return CompletableFuture.completedFuture(properties);
+		return XFuture.completedFuture(properties);
 	}
 
 	@Override
-	public CompletableFuture<Void> delete(String key) {
+	public XFuture<Void> delete(String key) {
 		EntityManager mgr = factory.createEntityManager();
 		mgr.getTransaction().begin();
 
@@ -93,11 +94,11 @@ public class SimpleStorageImpl implements SimpleStorage {
 		mgr.getTransaction().commit();
 		mgr.close();
 		
-		return CompletableFuture.completedFuture(null);
+		return XFuture.completedFuture(null);
 	}
 
 	@Override
-	public CompletableFuture<Void> delete(String key, String subKey) {
+	public XFuture<Void> delete(String key, String subKey) {
 		EntityManager mgr = factory.createEntityManager();
 		mgr.getTransaction().begin();
 
@@ -109,6 +110,6 @@ public class SimpleStorageImpl implements SimpleStorage {
 		mgr.getTransaction().commit();
 		mgr.close();
 		
-		return CompletableFuture.completedFuture(null);
+		return XFuture.completedFuture(null);
 	}
 }

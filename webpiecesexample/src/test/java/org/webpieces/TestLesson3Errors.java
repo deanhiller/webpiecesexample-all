@@ -14,6 +14,7 @@ import org.webpieces.httpclient11.api.HttpFullRequest;
 import org.webpieces.httpclient11.api.HttpFullResponse;
 import org.webpieces.httpclient11.api.HttpSocket;
 import org.webpieces.httpparser.api.dto.KnownStatusCode;
+import org.webpieces.util.futures.XFuture;
 import org.webpieces.webserver.api.ServerConfig;
 import org.webpieces.webserver.test.AbstractWebpiecesTest;
 import org.webpieces.webserver.test.Asserts;
@@ -80,7 +81,7 @@ public class TestLesson3Errors extends AbstractWebpiecesTest {
 		});
 		HttpFullRequest req = TestLesson2Html.createRequest("/");
 		
-		CompletableFuture<HttpFullResponse> respFuture = http11Socket.send(req);
+		XFuture<HttpFullResponse> respFuture = http11Socket.send(req);
 		
 		ResponseWrapper response = ResponseExtract.waitResponseAndWrap(respFuture);
 		response.assertStatusCode(KnownStatusCode.HTTP_500_INTERNAL_SVR_ERROR);
@@ -94,7 +95,7 @@ public class TestLesson3Errors extends AbstractWebpiecesTest {
 	public void testNotFound() {
 		HttpFullRequest req = TestLesson2Html.createRequest("/route/that/does/not/exist");
 		
-		CompletableFuture<HttpFullResponse> respFuture = http11Socket.send(req);
+		XFuture<HttpFullResponse> respFuture = http11Socket.send(req);
 		
 		ResponseWrapper response = ResponseExtract.waitResponseAndWrap(respFuture);
 		response.assertStatusCode(KnownStatusCode.HTTP_404_NOTFOUND);
@@ -110,7 +111,7 @@ public class TestLesson3Errors extends AbstractWebpiecesTest {
 		mockRemote.addValueToReturn(future);
 		HttpFullRequest req = TestLesson2Html.createRequest("/async");
 		
-		CompletableFuture<HttpFullResponse> respFuture = http11Socket.send(req);
+		XFuture<HttpFullResponse> respFuture = http11Socket.send(req);
 		
 		Assert.assertFalse(respFuture.isDone());
 
