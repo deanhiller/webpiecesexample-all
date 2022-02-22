@@ -1,6 +1,6 @@
 package org.webpieces;
 
-import java.util.concurrent.CompletableFuture;
+import org.webpieces.util.futures.XFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -22,7 +22,6 @@ import org.webpieces.httpparser.api.dto.HttpRequestLine;
 import org.webpieces.httpparser.api.dto.HttpUri;
 import org.webpieces.httpparser.api.dto.KnownHttpMethod;
 import org.webpieces.httpparser.api.dto.KnownStatusCode;
-import org.webpieces.util.futures.XFuture;
 import org.webpieces.webserver.api.ServerConfig;
 import org.webpieces.webserver.test.AbstractWebpiecesTest;
 import org.webpieces.webserver.test.Asserts;
@@ -34,7 +33,8 @@ import com.google.inject.Module;
 
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.webpieces.mock.JavaCache;
-import org.webpieces.mock.MockRemoteSystem;
+import org.webpieces.mock.MockRemoteService;
+import org.webpieces.service.FetchValueResponse;
 import org.webpieces.service.RemoteService;
 
 /**
@@ -49,7 +49,7 @@ public class TestLesson2Html extends AbstractWebpiecesTest {
 	private final static Logger log = LoggerFactory.getLogger(TestLesson2Html.class);
 	
 	//see below comments in AppOverrideModule
-	private MockRemoteSystem mockRemote = new MockRemoteSystem(); //our your favorite mock library
+	private MockRemoteService mockRemote = new MockRemoteService(); //our your favorite mock library
 
 	private JdbcApi jdbc = JdbcFactory.create(JdbcConstants.jdbcUrl, JdbcConstants.jdbcUser, JdbcConstants.jdbcPassword);
 	private String[] args = { "-http.port=:0", "-https.port=:0", "-hibernate.persistenceunit=org.webpieces.db.DbSettingsInMemory", "-hibernate.loadclassmeta=true" };
@@ -101,7 +101,7 @@ public class TestLesson2Html extends AbstractWebpiecesTest {
 	 */
 	@Test
 	public void testAsyncControllerAndRemoteSystem() {
-		CompletableFuture<Integer> future = new CompletableFuture<Integer>();
+		XFuture<FetchValueResponse> future = new XFuture<FetchValueResponse>();
 		mockRemote.addValueToReturn(future);
 		HttpFullRequest req = createRequest("/async");
 		
@@ -112,7 +112,7 @@ public class TestLesson2Html extends AbstractWebpiecesTest {
 		//notice that the thread returned but there is no response back to browser yet such that thread can do more work.
 		//next, simulate remote system returning a value..
 		int value = 85;
-		future.complete(value);
+		future.complete(new FetchValueResponse(85));
 
 		ResponseWrapper response = ResponseExtract.waitResponseAndWrap(respFuture);
 		response.assertStatusCode(KnownStatusCode.HTTP_200_OK);

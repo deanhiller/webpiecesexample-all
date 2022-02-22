@@ -6,9 +6,12 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.webpieces.util.futures.XFuture;
 import org.webpieces.framework.FeatureTest;
 import org.webpieces.framework.Requests;
 import org.webpieces.json.*;
+import org.webpieces.service.SendDataRequest;
+import org.webpieces.service.SendDataResponse;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -34,11 +37,13 @@ public class TestLesson1Json extends FeatureTest {
 		//move complex request building out of the test...
 		SearchRequest req = Requests.createSearchRequest();
 
+		mockRemoteService.setSendDefaultRetValue(XFuture.completedFuture(new SendDataResponse()));
+
 		//always call the client api we test in the test method so developers can find what we test
 		//very easily.. (do not push this down behind a method as we have found it slows others down
 		//and is the whole key point of the test)
-		SearchResponse resp = dataSaveApi.search(req).get(5, TimeUnit.SECONDS);
-		SearchResponse resp2 = dataSaveApi.search(req).get(5, TimeUnit.SECONDS);
+		SearchResponse resp = saveApi.search(req).get(5, TimeUnit.SECONDS);
+		SearchResponse resp2 = saveApi.search(req).get(5, TimeUnit.SECONDS);
 
 		validate(resp2);
 	}
@@ -47,7 +52,7 @@ public class TestLesson1Json extends FeatureTest {
 	public void testPathParams() throws ExecutionException, InterruptedException, TimeoutException {
 		String id = "asdf";
 		int number = 567;
-		MethodResponse methodResponse = restAPI.method(id, number).get(5, TimeUnit.SECONDS);
+		MethodResponse methodResponse = exampleRestAPI.method(id, number).get(5, TimeUnit.SECONDS);
 
 		Assert.assertEquals(id, methodResponse.getId());
 		Assert.assertEquals(number, methodResponse.getNumber());
@@ -58,7 +63,7 @@ public class TestLesson1Json extends FeatureTest {
 		String id = "asdf1";
 		int number = 5671;
 		String something = "qwerasdfqewr";
-		PostTestResponse methodResponse = restAPI.postTest(id, number, new PostTestRequest(something)).get(5, TimeUnit.SECONDS);
+		PostTestResponse methodResponse = exampleRestAPI.postTest(id, number, new PostTestRequest(something)).get(5, TimeUnit.SECONDS);
 
 		Assert.assertEquals(id, methodResponse.getId());
 		Assert.assertEquals(number, methodResponse.getNumber());
@@ -75,9 +80,9 @@ public class TestLesson1Json extends FeatureTest {
 		Assert.assertEquals(2.0, counter.count(), 0.1);
 
 		//check the mock system was called with 6
-		List<Integer> params = mockRemoteService.getSendMethodParameters();
+		List<SendDataRequest> params = mockRemoteService.getSendMethodParameters();
 		Assert.assertEquals(2, params.size());
-		Assert.assertEquals(6, params.get(0).intValue());
+		Assert.assertEquals(6, params.get(0).getNum());
 	}
 
 }

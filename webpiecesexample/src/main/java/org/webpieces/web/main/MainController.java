@@ -1,6 +1,6 @@
 package org.webpieces.web.main;
 
-import java.util.concurrent.CompletableFuture;
+import org.webpieces.util.futures.XFuture;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -15,6 +15,8 @@ import org.webpieces.router.api.controller.actions.Render;
 
 import org.webpieces.base.GlobalAppContext;
 import org.webpieces.mgmt.SomeBean;
+import org.webpieces.service.FetchValueRequest;
+import org.webpieces.service.FetchValueResponse;
 import org.webpieces.service.RemoteService;
 import org.webpieces.service.SomeLibrary;
 
@@ -61,9 +63,13 @@ public class MainController {
 		return Actions.renderThis("value", 21);
 	}
 	
-	public CompletableFuture<Action> myAsyncMethod() {
-		CompletableFuture<Integer> remoteValue = service.fetchRemoteValue("dean", 21);
-		return remoteValue.thenApply(s -> convertToAction(s));
+	public XFuture<Action> myAsyncMethod() {
+
+
+		FetchValueRequest request = new FetchValueRequest("dean", 21);
+		XFuture<FetchValueResponse> remoteValue = service.fetchValue(request);
+		//fetchRemoteValue("dean", 21);
+		return remoteValue.thenApply(s -> convertToAction(s.getNum()));
 	}
 	
 	//called from method above

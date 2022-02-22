@@ -3,16 +3,17 @@ package org.webpieces.framework;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.After;
 import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.webpieces.util.context.Context;
 import org.webpieces.webserver.api.ServerConfig;
-import org.webpieces.webserver.test.Asserts;
 import org.webpieces.Server;
 import org.webpieces.json.ExampleRestAPI;
 import org.webpieces.json.SaveApi;
 import org.webpieces.mock.JavaCache;
-import org.webpieces.mock.MockRemoteSystem;
+import org.webpieces.mock.MockRemoteService;
 import org.webpieces.service.RemoteService;
 
 import java.net.InetSocketAddress;
@@ -31,17 +32,23 @@ public class FeatureTest extends CompanyTest {
     private final static Logger log = LoggerFactory.getLogger(FeatureTest.class);
     private String[] args = { "-http.port=:0", "-https.port=:0", "-hibernate.persistenceunit=org.webpieces.db.DbSettingsInMemory", "-hibernate.loadclassmeta=true" };
 
-    protected SaveApi dataSaveApi;
-    protected ExampleRestAPI restAPI;
-    protected MockRemoteSystem mockRemoteService = new MockRemoteSystem();
+    protected SaveApi saveApi;
+    protected ExampleRestAPI exampleRestAPI;
+    protected MockRemoteService mockRemoteService = new MockRemoteService();
     protected SimpleMeterRegistry metrics;
 
     @Before
     public void setUp() throws InterruptedException, ClassNotFoundException, ExecutionException, TimeoutException {
         log.info("Setting up test");
         super.initialize();
-        dataSaveApi = super.createRestClient(SaveApi.class);
-        restAPI = super.createRestClient(ExampleRestAPI.class);
+        saveApi = super.createRestClient(SaveApi.class);
+        exampleRestAPI = super.createRestClient(ExampleRestAPI.class);
+    }
+
+    @After
+    public void tearDown() {
+        //do not leak context between tests
+        Context.clear();
     }
 
     @Override

@@ -1,6 +1,8 @@
 package org.webpieces.json;
 
-import java.util.concurrent.CompletableFuture;
+import org.webpieces.util.futures.XFuture;
+
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Inject;
@@ -25,7 +27,7 @@ import com.webpieces.http2.api.streaming.StreamWriter;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.webpieces.service.RemoteService;
-import org.webpieces.util.futures.XFuture;
+import org.webpieces.service.SendDataRequest;
 
 @Singleton
 public class JsonController implements SaveApi, ClientApi {
@@ -41,13 +43,13 @@ public class JsonController implements SaveApi, ClientApi {
 		this.remoteService = remoteService;
 	}
 	
-	public CompletableFuture<SearchResponse> asyncJsonRequest(int id, @Jackson SearchRequest request) {
+	public XFuture<SearchResponse> asyncJsonRequest(int id, @Jackson SearchRequest request) {
 		SearchResponse resp = new SearchResponse();
 		resp.setSearchTime(8);
 		resp.getMatches().add("match1");
 		resp.getMatches().add("match2");
 		
-		return CompletableFuture.completedFuture(resp);
+		return XFuture.completedFuture(resp);
 	}
 	
 	public SearchResponse jsonRequest(int id, @Jackson SearchRequest request) {
@@ -70,13 +72,13 @@ public class JsonController implements SaveApi, ClientApi {
 		return resp;
 	}
 	
-	public CompletableFuture<SearchResponse> postAsyncJson(int id, @Jackson SearchRequest request) {
+	public XFuture<SearchResponse> postAsyncJson(int id, @Jackson SearchRequest request) {
 		SearchResponse resp = new SearchResponse();
 		resp.setSearchTime(98);
 		resp.getMatches().add("match1");
 		resp.getMatches().add("match2");
 		
-		return CompletableFuture.completedFuture(resp);
+		return XFuture.completedFuture(resp);
 	}
 	
 	@Jackson
@@ -105,14 +107,14 @@ public class JsonController implements SaveApi, ClientApi {
 	}
 
 	@Override
-	public CompletableFuture<SearchResponse> search(@Jackson SearchRequest request) {
+	public XFuture<SearchResponse> search(@Jackson SearchRequest request) {
 		counter.increment();
 
 		//so we can test out mocking remote services
-		remoteService.sendData(6);
+		remoteService.sendData(new SendDataRequest(6)).join();
 
 		SearchResponse resp = postJson(request);
-		return CompletableFuture.completedFuture(resp);
+		return XFuture.completedFuture(resp);
 	}
 
 	private static class RequestStreamEchoWriter implements StreamWriter, StreamRef {

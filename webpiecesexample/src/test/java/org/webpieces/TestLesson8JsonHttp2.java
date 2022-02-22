@@ -1,7 +1,7 @@
 package org.webpieces;
 
 import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
+import org.webpieces.util.futures.XFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -20,7 +20,6 @@ import org.webpieces.http2client.api.Http2ClientFactory;
 import org.webpieces.http2client.api.Http2Socket;
 import org.webpieces.http2client.api.dto.FullRequest;
 import org.webpieces.http2client.api.dto.FullResponse;
-import org.webpieces.util.futures.XFuture;
 import org.webpieces.webserver.api.ServerConfig;
 import org.webpieces.webserver.test.Asserts;
 import org.webpieces.webserver.test.ResponseExtract;
@@ -45,7 +44,7 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.webpieces.json.SearchRequest;
 import org.webpieces.json.SearchResponse;
 import org.webpieces.mock.JavaCache;
-import org.webpieces.mock.MockRemoteSystem;
+import org.webpieces.mock.MockRemoteService;
 import org.webpieces.service.RemoteService;
 
 /**
@@ -169,7 +168,7 @@ public class TestLesson8JsonHttp2 extends AbstractHttp2Test {
 		public void configure(Binder binder) {
 			//Add overrides here generally using mocks from fields in the test class
 			
-			binder.bind(RemoteService.class).toInstance(new MockRemoteSystem()); //see above comment on the field mockRemote
+			binder.bind(RemoteService.class).toInstance(new MockRemoteService()); //see above comment on the field mockRemote
 		}
 	}
 	

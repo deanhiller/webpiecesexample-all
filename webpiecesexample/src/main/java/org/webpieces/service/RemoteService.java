@@ -1,10 +1,18 @@
 package org.webpieces.service;
 
-import java.util.concurrent.CompletableFuture;
+import org.webpieces.util.futures.XFuture;
+
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
 
 public interface RemoteService {
 
-	public CompletableFuture<Integer> fetchRemoteValue(String s, int i);
-	
-	public void sendData(int num);
+	@POST
+	@Path("/fetch/value")
+	public XFuture<FetchValueResponse> fetchValue(FetchValueRequest request);
+
+	@POST
+	@Path("/send/data")
+	public XFuture<SendDataResponse> sendData(SendDataRequest num);
+
 }
