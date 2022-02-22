@@ -54,7 +54,7 @@ public abstract class YourCompanyServer {
 			ServerConfig svrConfig, 
 			String ... args
 	) {
-		String base64Key = "OEqXnl6Y/n0QccRv1Uw3Se9pnkNANjBJ3qkCWlN1WKKIZbD3wEt0oMzJTCqFx0h0b4Em1fqWCLA+wNytqK/8Sg==";  //This gets replaced with a unique key each generated project which you need to keep or replace with your own!!!		
+		String base64Key = "wDFA8uO+FJGeky1bBDuWObbd0YQiTWF0UNtqfaIJurgbIHlMunXGddM1YmYH2nH00b8P5lFnrvyz9Pt+iDQaCA==";  //This gets replaced with a unique key each generated project which you need to keep or replace with your own!!!		
 		
 		log.info("Constructing WebpiecesServer with args="+Arrays.asList(args));
 
