@@ -76,6 +76,9 @@ subprojects {
    apply plugin: 'eclipse'
    apply plugin: 'idea'
 
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+
    //These 2 lines make it so you don't have to use @Param annotation on
    //every controller method which can get quite annoying.  Instead, webpieces
    //will just use reflection to grab the param names which is just as fast as
