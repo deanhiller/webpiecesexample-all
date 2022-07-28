@@ -1,2 +1,2 @@
-include 'webpiecesexample'
-include 'webpiecesexample-dev'
+include 'production'
+include 'development'
