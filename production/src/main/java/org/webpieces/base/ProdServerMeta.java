@@ -56,7 +56,7 @@ public class ProdServerMeta implements WebAppMeta {
 	@Override
     public List<Module> getGuiceModules() {
 		return Lists.newArrayList(
-				new GuiceModule(),
+				new GuiceModule(pluginConfig.getCmdLineArguments()),
 				new YourGlobalModule()
 		);
 	}
@@ -64,7 +64,7 @@ public class ProdServerMeta implements WebAppMeta {
 	@Override
     public List<Routes> getRouteModules() {
 		return Lists.newArrayList(
-				new RESTApiRoutes(SaveApi.class, JsonController.class),
+				new RESTApiRoutes(SaveApi.class, SaveController.class),
 				new RESTApiRoutes(ExampleRestAPI.class, JsonRESTController.class),
 				new MainRoutes(),
 				//The Controller package regex is org.webpieces.web.secure\..* so that we match org.webpieces.web.secure.* Controllers 

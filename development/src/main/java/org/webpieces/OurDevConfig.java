@@ -3,6 +3,8 @@ package org.webpieces;
 import org.webpieces.db.DbSettingsInMemory;
 import org.webpieces.services.DevConfig;
 
+import java.util.Map;
+
 public class OurDevConfig implements DevConfig {
 
 	@Override
@@ -11,6 +13,13 @@ public class OurDevConfig implements DevConfig {
 	}
 
 	@Override
+	public Map<String, String> getSimulatedEnvironmentProperties() {
+		return Map.of(
+				"REQ_ENV_VAR", "my value"
+		);
+	}
+
+		@Override
 	public String getHibernateSettingsClazz() {
 		return DbSettingsInMemory.class.getName();
 	}
