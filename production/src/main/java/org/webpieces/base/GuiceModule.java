@@ -13,6 +13,7 @@ import org.webpieces.microsvc.client.api.HttpsConfig;
 import org.webpieces.microsvc.client.api.RESTClientCreator;
 import org.webpieces.nio.api.BackpressureConfig;
 import org.webpieces.plugin.backend.login.BackendLogin;
+import org.webpieces.plugin.json.JacksonJsonConverter;
 import org.webpieces.router.api.extensions.ObjectStringConverter;
 import org.webpieces.router.api.extensions.SimpleStorage;
 import org.webpieces.router.api.extensions.Startable;
@@ -24,6 +25,7 @@ import com.google.inject.multibindings.Multibinder;
 import org.webpieces.util.cmdline2.Arguments;
 import org.webpieces.util.context.ClientAssertions;
 import org.webpieces.Server;
+import org.webpieces.db.DbCredentials;
 import org.webpieces.db.EducationEnum;
 import org.webpieces.db.RoleEnum;
 import org.webpieces.service.RemoteService;
@@ -41,13 +43,18 @@ public class GuiceModule implements Module {
 
 	private static final Logger log = LoggerFactory.getLogger(GuiceModule.class);
 	private final Supplier<String> optionalArg;
-	//private final Supplier<String> reqEnvVar;
-	private Supplier<String> reqArg;
+	private final Supplier<String> jdbcUrl;
+	private final Supplier<String> user;
+	private final Supplier<String> password;
 
-	public GuiceModule(Arguments cmdLineArguments) {
-		optionalArg = cmdLineArguments.createOptionalArg("optionalArg", "default", "Your help message", (s) -> s);
-		//reqEnvVar = cmdLineArguments.createRequiredEnvVar("REQ_ENV_VAR", "testDefault", "some help");
+	public GuiceModule(Arguments args) {
+		optionalArg = args.createOptionalArg("optionalArg", "default", "Your help message", (s) -> s);
 
+		//MODIFY these to createRequiredEnvVar so if not supplied, server will not startup.
+		//set to optional so server starts with in-memory database out of the box
+		jdbcUrl = args.createOptionalEnvVar("DB_URL", "jdbc:log4jdbc:h2:mem:test", "JDBC url including host, port, database", (s) -> s);
+		user = args.createOptionalEnvVar("DB_USER", "sa", "user to login to database", (s) -> s);
+		password = args.createOptionalEnvVar("DB_PASSWORD", "", "password to login to database", (s) -> s);
 		/**
 		 * Args are LAZY checked so in the cloud, we can fail ONCE and tell you ALL the errors regarding missing
 		 * arguments at once, rather than this ->
@@ -102,6 +109,13 @@ public class GuiceModule implements Module {
 		binder.bind(ClientServiceConfig.class).toInstance(HeadersCtx.createConfig(Server.APP_NAME));
 
 		binder.bind(ClientAssertions.class).to(ClientAssertionsImpl.class).asEagerSingleton();
+	}
+
+	@Provides
+	@Singleton
+	public DbCredentials dbCredentials() {
+		log.info("running in new world");
+		return new DbCredentials(jdbcUrl.get(), user.get(), password.get());
 	}
 
 	@Provides

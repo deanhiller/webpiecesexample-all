@@ -28,8 +28,9 @@ public abstract class YourCompanyServer {
 
 	public static void main(Function<ServerConfig, YourCompanyServer> yourServer) {
 		try {
-			String version = System.getProperty("java.version");
-			log.info("Starting Production Server under java version="+version);
+			String jdkVersion = System.getProperty("java.version");
+			String user = System.getProperty("user.name");
+			log.info("Starting Production Server user="+user+" under java version="+jdkVersion);
 
 
 			ServerConfig config = new ServerConfig(true);
@@ -54,7 +55,7 @@ public abstract class YourCompanyServer {
 			ServerConfig svrConfig, 
 			String ... args
 	) {
-		String base64Key = "AvmpVIxkJyo0wgSLIODB9eUgH0qB0JpvRxexUoTYUQ9sQ1+xhLU7VnVViI6OQXR0Ox9qdzekBX4yiVoWvBLB6Q==";  //This gets replaced with a unique key each generated project which you need to keep or replace with your own!!!		
+		String base64Key = "6/GaYlHRlBY1eLQHd53U1NiPnrplTswkAncCvTahmJXDs+9XSlbl5N6ESPHfiEBRiLNv+H7mwYBIIwnE6vqZkQ==";  //This gets replaced with a unique key each generated project which you need to keep or replace with your own!!!		
 		
 		log.info("Constructing WebpiecesServer with args="+Arrays.asList(args));
 

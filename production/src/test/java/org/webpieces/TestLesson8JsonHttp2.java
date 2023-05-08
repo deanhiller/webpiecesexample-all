@@ -9,8 +9,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.webpieces.data.api.DataWrapper;
@@ -71,7 +71,10 @@ public class TestLesson8JsonHttp2 extends AbstractHttp2Test {
 	@Override
 	public Map<String, String> initEnvironmentVars() {
 		return Map.of(
-			"REQ_ENV_VAR","somevalue"
+				//use a different in-memory db each test class so we can be multi-threaded
+				"DB_URL","jdbc:log4jdbc:h2:mem:"+getClass().getSimpleName(),
+				"DB_USER", "sa",
+				"DB_PASSWORD", ""
 		);
 	}
 
@@ -95,7 +98,7 @@ public class TestLesson8JsonHttp2 extends AbstractHttp2Test {
 		return Http2ClientFactory.createHttpClient(config, metrics);		
 	}
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		log.info("Setting up test");
 		//This line is not really needed but ensures you do not run a test without param names compiled in(which will fail).

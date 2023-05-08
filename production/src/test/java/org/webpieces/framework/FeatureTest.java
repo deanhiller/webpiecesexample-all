@@ -3,8 +3,8 @@ package org.webpieces.framework;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.webpieces.ctx.api.ClientServiceConfig;
@@ -14,7 +14,7 @@ import org.webpieces.webserver.test.http2.CompanyApiTest;
 import org.webpieces.Server;
 import org.webpieces.base.HeadersCtx;
 import org.webpieces.json.ExampleRestAPI;
-import org.webpieces.json.SaveApi;
+import org.webpieces.json.SearchApi;
 import org.webpieces.mock.JavaCache;
 import org.webpieces.mock.MockRemoteService;
 import org.webpieces.service.RemoteService;
@@ -44,23 +44,26 @@ public class FeatureTest extends CompanyApiTest {
     @Override
     public Map<String, String> initEnvironmentVars() {
         return Map.of(
-                "REQ_ENV_VAR","somevalue"
+                //use a different in-memory db each test class so we can be multi-threaded
+                "DB_URL","jdbc:log4jdbc:h2:mem:"+getClass().getSimpleName(),
+                "DB_USER", "sa",
+                "DB_PASSWORD", ""
         );
     }
 
-    protected SaveApi saveApi;
+    protected SearchApi saveApi;
     protected ExampleRestAPI exampleRestAPI;
     protected MockRemoteService mockRemoteService = new MockRemoteService();
 
-    @Before
+    @BeforeEach
     public void setUp() throws InterruptedException, ClassNotFoundException, ExecutionException, TimeoutException {
         log.info("Setting up test");
         super.initialize();
-        saveApi = super.createRestClient(SaveApi.class);
+        saveApi = super.createRestClient(SearchApi.class);
         exampleRestAPI = super.createRestClient(ExampleRestAPI.class);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         //do not leak context between tests
         Context.clear();

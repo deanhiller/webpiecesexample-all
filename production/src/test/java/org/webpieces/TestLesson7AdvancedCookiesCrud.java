@@ -5,8 +5,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.webpieces.ddl.api.JdbcApi;
@@ -50,11 +50,14 @@ public class TestLesson7AdvancedCookiesCrud extends AbstractWebpiecesTest {
 	@Override
 	public Map<String, String> initEnvironmentVars() {
 		return Map.of(
-				"REQ_ENV_VAR","somevalue"
+				//use a different in-memory db each test class so we can be multi-threaded
+				"DB_URL","jdbc:log4jdbc:h2:mem:"+getClass().getSimpleName(),
+				"DB_USER", "sa",
+				"DB_PASSWORD", ""
 		);
 	}
 
-	@Before
+	@BeforeEach
 	public void setUp() throws InterruptedException, ClassNotFoundException, ExecutionException, TimeoutException {
 		log.info("Setting up test");
 		Asserts.assertWasCompiledWithParamNames("test");
