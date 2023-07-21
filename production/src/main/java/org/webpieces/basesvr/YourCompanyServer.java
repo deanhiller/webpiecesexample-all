@@ -6,6 +6,7 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.webpieces.nio.api.channels.TCPServerChannel;
+import org.webpieces.util.futures.Logging;
 import org.webpieces.webserver.api.ServerConfig;
 import org.webpieces.webserver.api.WebpiecesServer;
 
@@ -21,6 +22,10 @@ import org.webpieces.Server;
  *
  */
 public abstract class YourCompanyServer {
+
+	static {
+		Logging.setupMDCForLogging();
+	}
 
 	private static final Logger log = LoggerFactory.getLogger(Server.class);
 
@@ -55,7 +60,7 @@ public abstract class YourCompanyServer {
 			ServerConfig svrConfig, 
 			String ... args
 	) {
-		String base64Key = "6/GaYlHRlBY1eLQHd53U1NiPnrplTswkAncCvTahmJXDs+9XSlbl5N6ESPHfiEBRiLNv+H7mwYBIIwnE6vqZkQ==";  //This gets replaced with a unique key each generated project which you need to keep or replace with your own!!!		
+		String base64Key = "6C1aCWqUMYcr3HOwu8l/qRivomrWdGAv971vt7bBfevo81iyUoNQ/A2rlmsKmxZGIRzIwxE/9X9plE9Zw7kjbA==";  //This gets replaced with a unique key each generated project which you need to keep or replace with your own!!!		
 		
 		log.info("Constructing WebpiecesServer with args="+Arrays.asList(args));
 
