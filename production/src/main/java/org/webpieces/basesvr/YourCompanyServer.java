@@ -5,6 +5,8 @@ import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.webpieces.nio.api.BackpressureConfig;
+import org.webpieces.nio.api.MaxRequestConfig;
 import org.webpieces.nio.api.channels.TCPServerChannel;
 import org.webpieces.util.futures.Logging;
 import org.webpieces.webserver.api.ServerConfig;
@@ -37,8 +39,12 @@ public abstract class YourCompanyServer {
 			String user = System.getProperty("user.name");
 			log.info("Starting Production Server user="+user+" under java version="+jdkVersion);
 
+			MaxRequestConfig maxRequestConfig = new MaxRequestConfig();
 
 			ServerConfig config = new ServerConfig(true);
+			BackpressureConfig backpressureConfig = config.getBackpressureConfig();
+			backpressureConfig.setLegacy(false);
+			backpressureConfig.setMaxRequestConfig(maxRequestConfig);
 			YourCompanyServer server2 = yourServer.apply(config);
 
 			server2.start();
@@ -60,7 +66,7 @@ public abstract class YourCompanyServer {
 			ServerConfig svrConfig, 
 			String ... args
 	) {
-		String base64Key = "/rFtNE1EcSZwvSwWu9HIXuJJ3l4L/jIUgCJrxBI8cv+B3B4O9ddKIEbroqQjjuI6cRArf7CTBEPxrj3+/ir2tg==";  //This gets replaced with a unique key each generated project which you need to keep or replace with your own!!!		
+		String base64Key = "Ubjr+X2NpA25hfpSFMmLIjXe0ucd/2xJUltbBLDKx0YSocJJhWjqr5SlqStl/LliMzjGT1o+hQytAkgbhw5bwg==";  //This gets replaced with a unique key each generated project which you need to keep or replace with your own!!!		
 		
 		log.info("Constructing WebpiecesServer with args="+Arrays.asList(args));
 
