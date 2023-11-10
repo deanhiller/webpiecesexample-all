@@ -45,6 +45,7 @@ public enum CompanyHeaders implements PlatformHeaders {
         return isSecure;
     }
 
+    @Override
     public boolean isDimensionForMetrics() {
         return isDimension;
     }
